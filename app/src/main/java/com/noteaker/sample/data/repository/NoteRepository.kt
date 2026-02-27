@@ -1,6 +1,7 @@
-package com.noteaker.sample.repository
+package com.noteaker.sample.data.repository
 
-import com.noteaker.sample.model.Note
+import com.noteaker.sample.data.dao.NoteDao
+import com.noteaker.sample.domain.model.Note
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +18,7 @@ interface NoteRepository {
 }
 
 @ActivityRetainedScoped
-class MyNoteRepository @Inject constructor() : NoteRepository {
+class MyNoteRepository @Inject constructor(dao: NoteDao) : NoteRepository {
     private val _noteList = MutableStateFlow<List<Note>>(listOf())
     override val noteList: StateFlow<List<Note>> = _noteList
 

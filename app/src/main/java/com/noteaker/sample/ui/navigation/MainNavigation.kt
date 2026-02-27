@@ -1,10 +1,11 @@
-package com.noteaker.sample.navigation.ui
+package com.noteaker.sample.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavController
 import com.noteaker.sample.navigation.NavState
 import com.noteaker.sample.navigation.NavigationManager
+import com.noteaker.sample.ui.common.collectAsStateLifeCycle
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -15,7 +16,7 @@ import timber.log.Timber
 @Composable
 fun MainNavigation(navigationManager: NavigationManager, navController: NavController) {
     LaunchedEffect(key1 = Unit) {
-        navigationManager.navigationState.debounce(1000).distinctUntilChanged().onEach { navState ->
+        navigationManager.navigationState.debounce(100).distinctUntilChanged().onEach { navState ->
             when (navState) {
                 is NavState.NavigateToRoute -> {
                     navigateToRoute(navState, navController)
@@ -36,7 +37,6 @@ fun MainNavigation(navigationManager: NavigationManager, navController: NavContr
         }
     }
 }
-
 
 fun navigateToRoute(
     navigationState: NavState.NavigateToRoute,

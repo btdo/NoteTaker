@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.noteaker.sample.R
-import com.noteaker.sample.navigation.TopBarItem
+import com.noteaker.sample.ui.navigation.TopBarItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

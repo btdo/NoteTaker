@@ -17,11 +17,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.noteaker.sample.MainViewModel
-import com.noteaker.sample.navigation.AppRoutes
+import com.noteaker.sample.ui.navigation.AppRoutes
 import com.noteaker.sample.navigation.NavigationManager
-import com.noteaker.sample.navigation.NoteListRoute
-import com.noteaker.sample.navigation.RouteView
-import com.noteaker.sample.navigation.ui.MainNavigation
+import com.noteaker.sample.ui.navigation.ListRoute
+import com.noteaker.sample.ui.navigation.RouteView
+import com.noteaker.sample.ui.navigation.MainNavigation
 import com.noteaker.sample.ui.common.TopBar
 import com.noteaker.sample.ui.common.collectAsStateLifeCycle
 
@@ -55,7 +55,7 @@ fun MainContent(
             MainNavigation(navigationManager, navController)
             NavHost(
                 navController = navController,
-                startDestination = NoteListRoute.path
+                startDestination = ListRoute.path
             ) {
                 AppRoutes.forEach {
                     it.composable(this, navController, navigationManager, viewModel)

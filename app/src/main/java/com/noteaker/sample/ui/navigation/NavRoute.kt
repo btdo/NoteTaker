@@ -1,4 +1,4 @@
-package com.noteaker.sample.navigation
+package com.noteaker.sample.ui.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
@@ -13,14 +13,17 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.noteaker.sample.MainViewModel
-import com.noteaker.sample.ui.feature.NoteListContent
-import com.noteaker.sample.ui.feature.NoteListViewModel
+import com.noteaker.sample.navigation.NavigationManager
+import com.noteaker.sample.ui.feature.add.AddScreen
+import com.noteaker.sample.ui.feature.add.AddViewModel
+import com.noteaker.sample.ui.feature.list.ListScreen
+import com.noteaker.sample.ui.feature.list.ListViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 
-val AppRoutes =  listOf<NavRoute<*>>(NoteListRoute)
+val AppRoutes =  listOf<NavRoute<*>>(ListRoute)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 interface NavRoute<T : ViewModel> {
@@ -66,19 +69,35 @@ interface NavRoute<T : ViewModel> {
     }
 }
 
-object NoteListRoute: NavRoute<NoteListViewModel> {
+object ListRoute: NavRoute<ListViewModel> {
     override val view: RouteView
-        get() = NoteTakerView.NoteListView
+        get() = NoteTakerView.ListView
 
     @Composable
-    override fun viewModel(): NoteListViewModel = hiltViewModel()
+    override fun viewModel(): ListViewModel = hiltViewModel()
 
     @Composable
     override fun Content(
         backStackEntry: NavBackStackEntry,
-        viewModel: NoteListViewModel
+        viewModel: ListViewModel
     ) {
-        NoteListContent(viewModel)
+        ListScreen(viewModel)
+    }
+}
+
+object AddRoute: NavRoute<AddViewModel> {
+    override val view: RouteView
+        get() = NoteTakerView.ListView
+
+    @Composable
+    override fun viewModel(): AddViewModel = hiltViewModel()
+
+    @Composable
+    override fun Content(
+        backStackEntry: NavBackStackEntry,
+        viewModel: AddViewModel
+    ) {
+        AddScreen(viewModel)
     }
 }
 
@@ -90,7 +109,7 @@ interface RouteView {
 
     companion object {
         fun findRouteFromPath(route: String?): NavRoute<*> {
-            if (route == null) return NoteListRoute
+            if (route == null) return ListRoute
             val path = route.substringBefore("/")
             AppRoutes.forEach { route ->
                 if (route.path.substringBefore("/") == path) {
@@ -119,7 +138,8 @@ open class ScaffoldView(
 }
 
 sealed class NoteTakerView {
-    object NoteListView: ScaffoldView()
+    object ListView: ScaffoldView()
+    object AddView: ScaffoldView()
 }
 
 sealed class TopBarItem(
@@ -133,6 +153,6 @@ sealed class TopBarItem(
         icon = Icons.Default.QuestionMark,
         text = null,
         contentDescription = "Help",
-        route = NoteListRoute
+        route = ListRoute
     )
 }

@@ -8,9 +8,11 @@ import javax.inject.Inject
 class NavigationManager @Inject constructor() {
     val navigationState: MutableStateFlow<NavState> =
         MutableStateFlow(NavState.Idle)
+
     fun onNavigated(state: NavState) {
         navigationState.compareAndSet(state, NavState.Idle)
     }
+
     fun popBackStack() {
         navigate(NavState.PopBackStack)
     }
@@ -20,6 +22,9 @@ class NavigationManager @Inject constructor() {
     }
 }
 
+/**
+ * Navigate to route.  When isRoot is true, clear the back stack
+ */
 data class NavigationCommand constructor(val path: String, val isRoot: Boolean = false)
 
 sealed class NavState {
