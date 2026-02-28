@@ -92,7 +92,7 @@ object ListRoute : NavRoute<ListViewModel> {
 
 object AddRoute : NavRoute<AddViewModel> {
     override val view: RouteView
-        get() = NoteTakerView.ListView
+        get() = NoteTakerView.AddView
 
     @Composable
     override fun viewModel(): AddViewModel = hiltViewModel()
