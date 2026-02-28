@@ -25,7 +25,7 @@ class NavigationManager @Inject constructor() {
 /**
  * Navigate to route.  When isRoot is true, clear the back stack
  */
-data class NavigationCommand constructor(val path: String, val isRoot: Boolean = false)
+data class NavigationCommand (val path: String, val clearBackStack: Boolean = false)
 
 sealed class NavState {
     object Idle : NavState()

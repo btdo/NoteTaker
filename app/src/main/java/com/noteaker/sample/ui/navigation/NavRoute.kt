@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 
-val AppRoutes =  listOf<NavRoute<*>>(ListRoute)
+val AppRoutes = listOf<NavRoute<*>>(ListRoute, AddRoute)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 interface NavRoute<T : ViewModel> {
@@ -69,7 +69,7 @@ interface NavRoute<T : ViewModel> {
     }
 }
 
-object ListRoute: NavRoute<ListViewModel> {
+object ListRoute : NavRoute<ListViewModel> {
     override val view: RouteView
         get() = NoteTakerView.ListView
 
@@ -85,7 +85,7 @@ object ListRoute: NavRoute<ListViewModel> {
     }
 }
 
-object AddRoute: NavRoute<AddViewModel> {
+object AddRoute : NavRoute<AddViewModel> {
     override val view: RouteView
         get() = NoteTakerView.ListView
 
@@ -97,7 +97,9 @@ object AddRoute: NavRoute<AddViewModel> {
         backStackEntry: NavBackStackEntry,
         viewModel: AddViewModel
     ) {
-        AddScreen(viewModel)
+        AddScreen(onMicrophoneClick = {}, onCameraClick = {}) { note ->
+            viewModel.add(note)
+        }
     }
 }
 
@@ -138,8 +140,8 @@ open class ScaffoldView(
 }
 
 sealed class NoteTakerView {
-    object ListView: ScaffoldView()
-    object AddView: ScaffoldView()
+    object ListView : ScaffoldView()
+    object AddView : ScaffoldView()
 }
 
 sealed class TopBarItem(

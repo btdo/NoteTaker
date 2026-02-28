@@ -5,10 +5,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavController
 import com.noteaker.sample.navigation.NavState
 import com.noteaker.sample.navigation.NavigationManager
-import com.noteaker.sample.ui.common.collectAsStateLifeCycle
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import timber.log.Timber
 
@@ -16,25 +16,28 @@ import timber.log.Timber
 @Composable
 fun MainNavigation(navigationManager: NavigationManager, navController: NavController) {
     LaunchedEffect(key1 = Unit) {
-        navigationManager.navigationState.debounce(100).distinctUntilChanged().onEach { navState ->
-            when (navState) {
-                is NavState.NavigateToRoute -> {
-                    navigateToRoute(navState, navController)
+        navigationManager.navigationState
+            .debounce(100)
+            .distinctUntilChanged()
+            .onEach { navState ->
+                when (navState) {
+                    is NavState.NavigateToRoute -> {
+                        navigateToRoute(navState, navController)
+                    }
+
+                    is NavState.PopToRoute -> {
+                        navController.popBackStack(navState.destination, navState.isInclusive)
+                    }
+
+                    is NavState.PopBackStack -> {
+                        navController.popBackStack()
+                    }
+
+                    is NavState.Idle -> {}
                 }
 
-                is NavState.PopToRoute -> {
-                    navController.popBackStack(navState.destination, navState.isInclusive)
-                }
-
-                is NavState.PopBackStack -> {
-                    navController.popBackStack()
-                }
-
-                is NavState.Idle -> {}
-            }
-
-            navigationManager.onNavigated(navState)
-        }
+                navigationManager.onNavigated(navState)
+            }.launchIn(scope = this)
     }
 }
 
@@ -49,7 +52,7 @@ fun navigateToRoute(
             launchSingleTop = true
             // Restore state when reselecting a previously selected item
             restoreState = true
-            if (navigationState.command.isRoot) {
+            if (navigationState.command.clearBackStack) {
                 popUpTo(navController.graph.id) {
                     inclusive = true
                 }
