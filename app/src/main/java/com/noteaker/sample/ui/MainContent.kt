@@ -35,13 +35,7 @@ fun MainContent(
     val currentRoute = navBackStackEntry?.destination?.route
     val route = RouteView.findRouteFromPath(currentRoute)
     val shouldShowTopBar by route.view.isShowTopBar.collectAsStateLifeCycle()
-    Scaffold(modifier = Modifier.fillMaxSize(), floatingActionButton = {
-        IconButton(onClick = {
-            viewModel.addClick()
-        }) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
-        }
-    }, topBar = {
+    Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
         if (shouldShowTopBar) {
             TopBar(
                 topBarItems = route.view.topBarItems,

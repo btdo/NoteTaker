@@ -4,6 +4,8 @@ import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -81,7 +83,10 @@ object ListRoute : NavRoute<ListViewModel> {
         backStackEntry: NavBackStackEntry,
         viewModel: ListViewModel
     ) {
-        ListScreen(viewModel)
+        val notes by viewModel.notes.collectAsState(listOf())
+        ListScreen(notes) {
+            viewModel.addClick()
+        }
     }
 }
 
