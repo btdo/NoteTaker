@@ -47,7 +47,7 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun ListScreen(notes: List<Note>, onAddClick: () -> Unit) {
+fun ListScreen(notes: List<Note>, onAddClick: () -> Unit = {}, onEditClick: (note: Note) -> Unit = {}) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -62,7 +62,7 @@ fun ListScreen(notes: List<Note>, onAddClick: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(items = notes, key = { it.id }) { note ->
-                    NoteCard(note = note, onClick = { /* TODO: Navigate to edit */ })
+                    NoteCard(note = note, onClick = { onEditClick(note) })
                 }
             }
         }

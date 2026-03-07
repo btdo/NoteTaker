@@ -4,8 +4,12 @@ import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -13,11 +17,16 @@ import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.noteaker.sample.MainViewModel
+import com.noteaker.sample.domain.model.Note
+import com.noteaker.sample.navigation.NavigationCommand
 import com.noteaker.sample.navigation.NavigationManager
-import com.noteaker.sample.ui.feature.add.AddScreen
+import com.noteaker.sample.ui.common.DetailsScreen
 import com.noteaker.sample.ui.feature.add.AddViewModel
+import com.noteaker.sample.ui.feature.edit.EditViewModel
 import com.noteaker.sample.ui.feature.list.ListScreen
 import com.noteaker.sample.ui.feature.list.ListViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,7 +34,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 
-val AppRoutes = listOf<NavRoute<*>>(ListRoute, AddRoute)
+val AppRoutes = listOf(ListRoute, AddRoute, EditRoute)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 interface NavRoute<T : ViewModel> {
@@ -84,9 +93,7 @@ object ListRoute : NavRoute<ListViewModel> {
         viewModel: ListViewModel
     ) {
         val notes by viewModel.notes.collectAsState(listOf())
-        ListScreen(notes) {
-            viewModel.addClick()
-        }
+        ListScreen(notes, onAddClick = { viewModel.addClick() }, onEditClick = { note ->  viewModel.onEditClick(note) })
     }
 }
 
@@ -102,8 +109,55 @@ object AddRoute : NavRoute<AddViewModel> {
         backStackEntry: NavBackStackEntry,
         viewModel: AddViewModel
     ) {
-        AddScreen(onMicrophoneClick = {}, onCameraClick = {}) { note ->
-            viewModel.add(note)
+        DetailsScreen(
+            onMicrophoneClick = {}, onCameraClick = {},
+            onCancelClick = { viewModel.onCancel() }) { note ->
+            viewModel.onSave(note)
+        }
+    }
+}
+
+object EditRoute : NavRoute<EditViewModel> {
+    const val NOTE_ID_KEY = "noteId"
+    override val path: String
+        get() = "${super.path}/{$NOTE_ID_KEY}"
+    override val view: RouteView
+        get() = NoteTakerView.EditView
+
+    override fun getArguments(): List<NamedNavArgument> = listOf(navArgument("$NOTE_ID_KEY") {
+        type = NavType.IntType
+    })
+
+    fun getRoute(noteId: Int): NavigationCommand {
+        return NavigationCommand(
+            path.replace("{$NOTE_ID_KEY}", "$noteId")
+        )
+    }
+
+    @Composable
+    override fun viewModel(): EditViewModel = hiltViewModel()
+
+    @Composable
+    override fun Content(
+        backStackEntry: NavBackStackEntry,
+        viewModel: EditViewModel
+    ) {
+        val noteId = backStackEntry.arguments?.getInt("$NOTE_ID_KEY") ?: 0
+        var note by remember { mutableStateOf<Note?>(null) }
+
+        LaunchedEffect(noteId) {
+            note = viewModel.getEditNote(noteId)
+        }
+
+        note?.let { currentNote ->
+            DetailsScreen(
+                note = currentNote,
+                onMicrophoneClick = {},
+                onCameraClick = {},
+                onCancelClick = { viewModel.onCancel() }
+            ) { updatedNote ->
+                viewModel.onSave(updatedNote)
+            }
         }
     }
 }
@@ -147,6 +201,7 @@ open class ScaffoldView(
 sealed class NoteTakerView {
     object ListView : ScaffoldView()
     object AddView : ScaffoldView()
+    object EditView : ScaffoldView()
 }
 
 sealed class TopBarItem(

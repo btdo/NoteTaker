@@ -23,7 +23,7 @@ interface NoteRepository {
     suspend fun add(note: Note)
     suspend fun edit(note: Note)
     suspend fun delete(note: Note)
-    suspend fun get(id: String)
+    suspend fun get(id: Int) : Note
 }
 
 @ActivityRetainedScoped
@@ -66,7 +66,12 @@ class MyNoteRepository @Inject constructor(
         noteDao.delete(note.toEntity())
     }
 
-    override suspend fun get(id: String) {
-        // Optional: load single note by id if needed
+    override suspend fun get(id: Int): Note {
+        noteDao.getById(id.toLong())?.let {
+            val attachments = attachmentDao.getByNoteIdOnce(it.id).map { it.toAttachment() }
+            return it.toNote(attachments)
+        }
+
+        throw IllegalArgumentException("Note not found for $id")
     }
 }

@@ -1,4 +1,4 @@
-package com.noteaker.sample.ui.feature.add
+package com.noteaker.sample.ui.feature.edit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,16 +10,20 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AddViewModel @Inject constructor(
+class EditViewModel @Inject constructor(
     private val repository: NoteRepository,
     private val navigationManager: NavigationManager
 ) : ViewModel() {
 
     fun onSave(note: Note) {
         viewModelScope.launch {
-            repository.add(note)
+            repository.edit(note)
             navigationManager.popBackStack()
         }
+    }
+
+    suspend fun getEditNote(noteId: Int): Note {
+        return repository.get(noteId)
     }
 
     fun onCancel() {

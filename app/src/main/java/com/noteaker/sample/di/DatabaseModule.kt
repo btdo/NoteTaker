@@ -24,7 +24,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "notetaker.db"
         )
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(false)
             .build()
 
     @Provides

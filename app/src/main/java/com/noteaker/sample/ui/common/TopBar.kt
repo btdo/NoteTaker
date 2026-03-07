@@ -46,7 +46,9 @@ fun TopBar(
             }
         },
         actions = {
-            NavBarItems(items = topBarItems) { }
+            NavBarItems(items = topBarItems) {
+                onItemClicked(it)
+            }
         })
 }
 

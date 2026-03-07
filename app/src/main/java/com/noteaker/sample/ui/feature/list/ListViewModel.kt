@@ -7,6 +7,7 @@ import com.noteaker.sample.navigation.NavState
 import com.noteaker.sample.navigation.NavigationCommand
 import com.noteaker.sample.navigation.NavigationManager
 import com.noteaker.sample.ui.navigation.AddRoute
+import com.noteaker.sample.ui.navigation.EditRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -20,5 +21,9 @@ class ListViewModel @Inject constructor(
 
     fun addClick() {
         navigationManager.navigate(NavState.NavigateToRoute(NavigationCommand(AddRoute.path)))
+    }
+
+    fun onEditClick(note: Note) {
+        navigationManager.navigate(NavState.NavigateToRoute(EditRoute.getRoute(note.id)))
     }
 }
