@@ -1,8 +1,13 @@
 package com.noteaker.sample.ui.navigation
 
+import android.R
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QuestionMark
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -10,6 +15,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -24,11 +32,16 @@ import com.noteaker.sample.MainViewModel
 import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.navigation.NavigationCommand
 import com.noteaker.sample.navigation.NavigationManager
-import com.noteaker.sample.ui.common.DetailsScreen
+import com.noteaker.sample.ui.common.ErrorScreen
+import com.noteaker.sample.ui.common.ShimmerOverlay
+import com.noteaker.sample.ui.common.collectAsStateLifeCycle
+import com.noteaker.sample.ui.feature.DetailsHeader
+import com.noteaker.sample.ui.feature.NoteDetailsScreen
 import com.noteaker.sample.ui.feature.add.AddViewModel
 import com.noteaker.sample.ui.feature.edit.EditViewModel
 import com.noteaker.sample.ui.feature.list.ListScreen
 import com.noteaker.sample.ui.feature.list.ListViewModel
+import com.noteaker.sample.ui.model.UIState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -93,7 +106,10 @@ object ListRoute : NavRoute<ListViewModel> {
         viewModel: ListViewModel
     ) {
         val notes by viewModel.notes.collectAsState(listOf())
-        ListScreen(notes, onAddClick = { viewModel.addClick() }, onEditClick = { note ->  viewModel.onEditClick(note) })
+        ListScreen(
+            notes,
+            onAddClick = viewModel::addClick,
+            onEditClick = viewModel::onEditClick)
     }
 }
 
@@ -109,10 +125,28 @@ object AddRoute : NavRoute<AddViewModel> {
         backStackEntry: NavBackStackEntry,
         viewModel: AddViewModel
     ) {
-        DetailsScreen(
-            onMicrophoneClick = {}, onCameraClick = {},
-            onCancelClick = { viewModel.onCancel() }) { note ->
-            viewModel.onSave(note)
+        val uiState by viewModel.uiState.collectAsStateLifeCycle()
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            NoteDetailsScreen(
+                header = { DetailsHeader("Add Note") },
+                additionalNote = {
+                    if (uiState is UIState.Error) {
+                        Text(
+                            text = (uiState as UIState.Error).message,
+                            color = Color.Red
+                        )
+                    }
+                },
+                note = null,
+                onMicrophoneClick = {},
+                onCameraClick = {},
+                onCancelClick = viewModel::onCancel,
+                onSaveClick = viewModel::onSave
+            )
+            if (uiState == UIState.Loading) {
+                ShimmerOverlay()
+            }
         }
     }
 }
@@ -143,22 +177,35 @@ object EditRoute : NavRoute<EditViewModel> {
         viewModel: EditViewModel
     ) {
         val noteId = backStackEntry.arguments?.getInt("$NOTE_ID_KEY") ?: 0
-        var note by remember { mutableStateOf<Note?>(null) }
+        val uiState by viewModel.uiState.collectAsStateLifeCycle()
+        val note by viewModel.note.collectAsStateLifeCycle(null)
 
         LaunchedEffect(noteId) {
-            note = viewModel.getEditNote(noteId)
+            viewModel.getEditNote(noteId)
         }
 
-        note?.let { currentNote ->
-            DetailsScreen(
-                note = currentNote,
+        Box(modifier = Modifier.fillMaxSize()) {
+            NoteDetailsScreen(
+                header = { DetailsHeader("Edit Note") },
+                additionalNote = {
+                    if (uiState is UIState.Error) {
+                        Text(
+                            text = (uiState as UIState.Error).message, color = Color.Red
+                        )
+                    }
+                },
+                note = note,
                 onMicrophoneClick = {},
                 onCameraClick = {},
-                onCancelClick = { viewModel.onCancel() }
-            ) { updatedNote ->
-                viewModel.onSave(updatedNote)
+                onCancelClick = viewModel::onCancel,
+                onSaveClick = viewModel::onSave
+            )
+            if (uiState == UIState.Loading) {
+                ShimmerOverlay()
             }
         }
+
+
     }
 }
 

@@ -1,4 +1,4 @@
-package com.noteaker.sample.ui.common
+package com.noteaker.sample.ui.feature
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -41,15 +41,17 @@ import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.ui.theme.NoteTakerTheme
 
 @Composable
-fun DetailsScreen(
+fun NoteDetailsScreen(
+    header: @Composable () -> Unit,
+    additionalNote: @Composable () -> Unit = {},
     note: Note? = null,
     onMicrophoneClick: () -> Unit,
     onCameraClick: () -> Unit,
     onCancelClick: () -> Unit,
     onSaveClick: (note: Note) -> Unit
 ) {
-    var title by remember { mutableStateOf(note?.title ?: "") }
-    var content by remember { mutableStateOf(note?.note ?: "") }
+    var title by remember(note) { mutableStateOf(note?.title ?: "") }
+    var content by remember(note) { mutableStateOf(note?.note ?: "") }
 
     Column(
         modifier = Modifier
@@ -59,7 +61,7 @@ fun DetailsScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Header with accent
-        DetailsHeader()
+        header()
 
         // Title Card
         CardTitle(
@@ -72,6 +74,7 @@ fun DetailsScreen(
             content = it
         }
 
+        additionalNote()
         // Action Buttons Row
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -88,76 +91,92 @@ fun DetailsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    IconButton(
-                        onClick = onMicrophoneClick,
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Mic,
-                            contentDescription = "Voice Input",
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    }
-
-                    IconButton(
-                        onClick = onCameraClick,
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.CameraAlt,
-                            contentDescription = "Add Photo",
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    }
-                }
+                AttachmentButtons(onMicrophoneClick, onCameraClick)
 
                 // Cancel/Save Buttons
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    // Cancel Button
-                    FilledIconButton(
-                        onClick = onCancelClick,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = Color.Gray,
-                            contentColor = Color.White
-                        ),
-                        modifier = Modifier.size(56.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Cancel,
-                            contentDescription = "Save Note",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-
-                    // Save Button
-                    FilledIconButton(
-                        onClick = {
-                            onSaveClick(Note(id = note?.id ?: 0, title = title, note = content))
-                        },
-                        enabled = title.isNotBlank() && content.isNotBlank(),
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.tertiary,
-                            contentColor = Color.White,
-                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                        ),
-                        modifier = Modifier.size(56.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Done,
-                            contentDescription = "Save Note",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
+                MainButtons(onCancelClick, onSaveClick, note, title, content)
             }
+        }
+    }
+}
+
+@Composable
+private fun AttachmentButtons(onMicrophoneClick: () -> Unit, onCameraClick: () -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        IconButton(
+            onClick = onMicrophoneClick,
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Mic,
+                contentDescription = "Voice Input",
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
+
+        IconButton(
+            onClick = onCameraClick,
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Filled.CameraAlt,
+                contentDescription = "Add Photo",
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
+    }
+}
+
+@Composable
+private fun MainButtons(
+    onCancelClick: () -> Unit,
+    onSaveClick: (Note) -> Unit,
+    note: Note?,
+    title: String,
+    content: String
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Cancel Button
+        FilledIconButton(
+            onClick = onCancelClick,
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = Color.Gray,
+                contentColor = Color.White
+            ),
+            modifier = Modifier.size(56.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Cancel,
+                contentDescription = "Save Note",
+                modifier = Modifier.size(28.dp)
+            )
+        }
+
+        // Save Button
+        FilledIconButton(
+            onClick = {
+                onSaveClick(Note(id = note?.id ?: 0, title = title, note = content))
+            },
+            enabled = title.isNotBlank() && content.isNotBlank(),
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                contentColor = Color.White,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+            ),
+            modifier = Modifier.size(56.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Done,
+                contentDescription = "Save Note",
+                modifier = Modifier.size(28.dp)
+            )
         }
     }
 }
@@ -199,13 +218,13 @@ private fun ColumnScope.DetailsContent(content: String, onContentChange: (String
 }
 
 @Composable
-private fun DetailsHeader() {
+fun DetailsHeader(title: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Create Note",
+            text = title,
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
@@ -263,24 +282,28 @@ private fun CardTitle(
 
 @Preview(name = "Light Mode", showBackground = true)
 @Composable
-fun DetailsScreenPreviewLight() {
+fun NoteDetailsScreenPreviewLight() {
     NoteTakerTheme(darkTheme = false) {
-        DetailsScreen(
+        NoteDetailsScreen(
             onSaveClick = {},
             onMicrophoneClick = {},
             onCameraClick = {},
-            onCancelClick = {})
+            onCancelClick = {}, header = {
+                DetailsHeader("Add Note")
+            })
     }
 }
 
 @Preview(name = "Dark Mode", showBackground = true)
 @Composable
-fun DetailsScreenPreviewDark() {
+fun NoteDetailsScreenPreviewDark() {
     NoteTakerTheme(darkTheme = true) {
-        DetailsScreen(
+        NoteDetailsScreen(
             onSaveClick = {},
             onMicrophoneClick = {},
             onCameraClick = {},
-            onCancelClick = {})
+            onCancelClick = {}, header = {
+                DetailsHeader("Add Note")
+            })
     }
 }
