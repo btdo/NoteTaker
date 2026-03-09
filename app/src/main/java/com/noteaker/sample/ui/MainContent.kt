@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -22,9 +21,11 @@ import com.noteaker.sample.navigation.NavigationManager
 import com.noteaker.sample.ui.common.TopBar
 import com.noteaker.sample.ui.common.collectAsStateLifeCycle
 import com.noteaker.sample.ui.navigation.AppRoutes
+import com.noteaker.sample.ui.navigation.DEFAULT_TOP_BAR_ITEMS
 import com.noteaker.sample.ui.navigation.ListRoute
 import com.noteaker.sample.ui.navigation.MainNavigation
 import com.noteaker.sample.ui.navigation.RouteView
+import com.noteaker.sample.ui.navigation.TopBarItem
 import timber.log.Timber
 
 @Composable
@@ -33,10 +34,6 @@ fun MainContent(
     navController: NavHostController = rememberNavController(),
     navigationManager: NavigationManager
 ) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val routePath = navBackStackEntry?.destination?.route
-    val route = RouteView.findRouteFromPath(routePath)
-    val shouldShowTopBar by route.view.isShowTopBar.collectAsStateLifeCycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -49,14 +46,11 @@ fun MainContent(
     Scaffold(modifier = Modifier.fillMaxSize(), snackbarHost = {
         SnackbarHost(hostState = snackbarHostState)
     } , topBar = {
-        if (shouldShowTopBar) {
-            TopBar(
-                topBarItems = route.view.topBarItems,
-                isShowBackButton = false,
-                onBackClicked = navigationManager::popBackStack,
-                onItemClicked = viewModel::onTopBarItemClick
-            )
-        }
+        RouteAwareTopBar(
+            navController = navController,
+            onBackClicked = navigationManager::popBackStack,
+            onItemClicked = viewModel::onTopBarItemClick
+        )
     }) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             MainNavigation(navigationManager, navController)
@@ -69,5 +63,29 @@ fun MainContent(
                 }
             }
         }
+    }
+}
+
+/**
+ * Isolates route/nav state reading so only this composable (and TopBar when needed) recomposes on
+ * navigation. MainContent no longer reads [currentBackStackEntryAsState], so it stays stable.
+ * Uses [DEFAULT_TOP_BAR_ITEMS] so TopBar receives the same list reference and can skip recomposition.
+ */
+@Composable
+private fun RouteAwareTopBar(
+    navController: NavHostController,
+    onBackClicked: () -> Unit,
+    onItemClicked: (TopBarItem) -> Unit
+) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val route = RouteView.findRouteFromPath(navBackStackEntry?.destination?.route)
+    val shouldShowTopBar by route.view.isShowTopBar.collectAsStateLifeCycle()
+    if (shouldShowTopBar) {
+        TopBar(
+            topBarItems = route.view.topBarItems,
+            isShowBackButton = false,
+            onBackClicked = onBackClicked,
+            onItemClicked = onItemClicked
+        )
     }
 }

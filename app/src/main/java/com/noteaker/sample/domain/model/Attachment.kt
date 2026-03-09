@@ -1,7 +1,9 @@
 package com.noteaker.sample.domain.model
 
+import androidx.compose.runtime.Immutable
 import com.noteaker.sample.data.model.AttachmentEntity
 
+@Immutable
 data class Attachment(
     val id: Long = 0,
     val uri: String,

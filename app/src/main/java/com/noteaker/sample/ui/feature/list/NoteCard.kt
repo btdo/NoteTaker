@@ -88,7 +88,7 @@ fun NoteCard(note: Note, onClick: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = formatDate(note.lastUpdated.time),
+                    text = formatDate(note.lastUpdated),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )

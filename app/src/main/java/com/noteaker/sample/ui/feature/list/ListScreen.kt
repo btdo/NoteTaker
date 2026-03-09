@@ -43,7 +43,6 @@ import com.noteaker.sample.domain.model.Attachment
 import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.ui.theme.NoteTakerTheme
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 @Composable
@@ -101,7 +100,7 @@ fun ListScreenPreview() {
                 id = 1,
                 title = "Meeting Notes",
                 note = "Discussed project timeline and deliverables. Need to follow up with the team about the new requirements.",
-                lastUpdated = Date(System.currentTimeMillis() - 3600000),
+                lastUpdated = System.currentTimeMillis() - 3600000,
                 attachments = listOf(
                     Attachment(uri = "file://test.pdf", displayName = "document.pdf")
                 )
@@ -110,13 +109,13 @@ fun ListScreenPreview() {
                 id = 2,
                 title = "Shopping List",
                 note = "Milk, Eggs, Bread, Coffee, Fruits",
-                lastUpdated = Date(System.currentTimeMillis() - 7200000)
+                lastUpdated = System.currentTimeMillis() - 7200000
             ),
             Note(
                 id = 3,
                 title = "Ideas for App",
                 note = "Add dark mode support, implement search functionality, create backup feature",
-                lastUpdated = Date(System.currentTimeMillis() - 86400000),
+                lastUpdated = System.currentTimeMillis() - 86400000,
                 attachments = listOf(
                     Attachment(uri = "file://sketch1.png"),
                     Attachment(uri = "file://sketch2.png")
@@ -137,13 +136,13 @@ fun ListScreenPreviewDark() {
                 id = 1,
                 title = "Meeting Notes",
                 note = "Discussed project timeline and deliverables. Need to follow up with the team about the new requirements.",
-                lastUpdated = Date(System.currentTimeMillis() - 3600000)
+                lastUpdated = System.currentTimeMillis() - 3600000
             ),
             Note(
                 id = 2,
                 title = "Shopping List",
                 note = "Milk, Eggs, Bread, Coffee, Fruits",
-                lastUpdated = Date(System.currentTimeMillis() - 7200000)
+                lastUpdated = System.currentTimeMillis() - 7200000
             )
         )
 

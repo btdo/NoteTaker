@@ -4,7 +4,6 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.noteaker.sample.domain.model.Attachment
 import com.noteaker.sample.domain.model.Note
-import java.util.Date
 
 @Entity(tableName = "notes")
 data class NoteEntity(
@@ -18,7 +17,7 @@ data class NoteEntity(
         id = id.toInt(),
         title = title,
         note = note,
-        lastUpdated = Date(lastUpdated),
+        lastUpdated = lastUpdated,
         attachments = attachments
     )
 }

@@ -230,12 +230,15 @@ interface RouteView {
     }
 }
 
+/** Shared top bar items so the same list reference is passed to TopBar across routes (avoids recomposition). */
+val DEFAULT_TOP_BAR_ITEMS: List<TopBarItem> = listOf(TopBarItem.Question)
+
 open class ScaffoldView(
     val defaultIsShowTopBar: Boolean = true
 ) : RouteView {
     private val _isShowTopBar = MutableStateFlow(defaultIsShowTopBar)
     override val isShowTopBar: StateFlow<Boolean> = _isShowTopBar
-    override val topBarItems: List<TopBarItem> = listOf<TopBarItem>(TopBarItem.Question)
+    override val topBarItems: List<TopBarItem> = DEFAULT_TOP_BAR_ITEMS
     override fun setIsShowTopBar(isShow: Boolean) {
         _isShowTopBar.value = isShow
     }
