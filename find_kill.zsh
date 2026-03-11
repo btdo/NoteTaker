@@ -1,0 +1,1 @@
+kill -9 $(lsof -n -i4TCP:5037 | grep LISTEN | awk '{print $2}')

@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
@@ -31,7 +30,7 @@ import com.noteaker.sample.ui.feature.DetailsHeader
 import com.noteaker.sample.ui.feature.NoteDetailsScreen
 import com.noteaker.sample.ui.feature.add.AddViewModel
 import com.noteaker.sample.ui.feature.edit.EditViewModel
-import com.noteaker.sample.ui.feature.list.ListScreen
+import com.noteaker.sample.ui.feature.list.ListSearchScreen
 import com.noteaker.sample.ui.feature.list.ListViewModel
 import com.noteaker.sample.ui.model.UIState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -97,15 +96,7 @@ object ListRoute : NavRoute<ListViewModel> {
         backStackEntry: NavBackStackEntry,
         viewModel: ListViewModel
     ) {
-        val notes by viewModel.searchResults.collectAsStateWithLifecycle(listOf())
-        val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
-        ListScreen(
-            notes = notes,
-            onAddClick = viewModel::addClick,
-            onEditClick = viewModel::onEditClick,
-            searchQuery = searchQuery,
-            onQueryChange = viewModel::onSearchQuery
-        )
+        ListSearchScreen(viewModel)
     }
 }
 
