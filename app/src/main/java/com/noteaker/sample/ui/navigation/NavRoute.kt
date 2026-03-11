@@ -1,26 +1,20 @@
 package com.noteaker.sample.ui.navigation
 
-import android.R
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.QuestionMark
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
@@ -29,10 +23,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.noteaker.sample.MainViewModel
-import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.navigation.NavigationCommand
 import com.noteaker.sample.navigation.NavigationManager
-import com.noteaker.sample.ui.common.ErrorScreen
 import com.noteaker.sample.ui.common.ShimmerOverlay
 import com.noteaker.sample.ui.common.collectAsStateLifeCycle
 import com.noteaker.sample.ui.feature.DetailsHeader
@@ -105,11 +97,15 @@ object ListRoute : NavRoute<ListViewModel> {
         backStackEntry: NavBackStackEntry,
         viewModel: ListViewModel
     ) {
-        val notes by viewModel.notes.collectAsState(listOf())
+        val notes by viewModel.searchResults.collectAsStateWithLifecycle(listOf())
+        val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
         ListScreen(
-            notes,
+            notes = notes,
             onAddClick = viewModel::addClick,
-            onEditClick = viewModel::onEditClick)
+            onEditClick = viewModel::onEditClick,
+            searchQuery = searchQuery,
+            onQueryChange = viewModel::onSearchQuery
+        )
     }
 }
 
@@ -231,7 +227,7 @@ interface RouteView {
 }
 
 /** Shared top bar items so the same list reference is passed to TopBar across routes (avoids recomposition). */
-val DEFAULT_TOP_BAR_ITEMS: List<TopBarItem> = listOf(TopBarItem.Question)
+val DEFAULT_TOP_BAR_ITEMS: List<TopBarItem> = listOf()
 
 open class ScaffoldView(
     val defaultIsShowTopBar: Boolean = true
@@ -261,10 +257,10 @@ sealed class TopBarItem(
     open val contentDescription: String,
     open val route: NavRoute<*>
 ) {
-    object Question : TopBarItem(
-        icon = Icons.Default.QuestionMark,
+    object Something : TopBarItem(
+        icon = Icons.Filled.Home,
         text = null,
-        contentDescription = "Help",
+        contentDescription = "Home",
         route = ListRoute
     )
 }

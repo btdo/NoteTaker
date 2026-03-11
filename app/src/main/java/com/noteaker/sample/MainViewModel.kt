@@ -13,11 +13,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(private val navigationManager: NavigationManager) : ViewModel() {
 
-    fun addClick() {
-        navigationManager.navigate(NavState.NavigateToRoute(NavigationCommand(AddRoute.path)))
-    }
-
     fun onTopBarItemClick(item: TopBarItem) {
-
+        navigationManager.navigate(NavState.NavigateToRoute(NavigationCommand(item.route.path)))
     }
 }

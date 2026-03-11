@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledIconButton
@@ -28,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -46,27 +48,45 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 @Composable
-fun ListScreen(notes: List<Note>, onAddClick: () -> Unit = {}, onEditClick: (note: Note) -> Unit = {}) {
+fun ListScreen(
+    notes: List<Note>,
+    onAddClick: () -> Unit = {},
+    onEditClick: (note: Note) -> Unit = {},
+    searchQuery: String = "",
+    onQueryChange: (String) -> Unit = {}
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        if (notes.isEmpty()) {
-            EmptyNotesView()
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(items = notes, key = { it.id }) { note ->
-                    NoteCard(note = note, onClick = { onEditClick(note) })
+        Column(modifier = Modifier.fillMaxSize()) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = onQueryChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                placeholder = { Text("Search by title or content...") },
+                singleLine = true
+            )
+
+            if (notes.isEmpty()) {
+                EmptyNotesView(isSearching = searchQuery.isNotBlank())
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(items = notes, key = { it.id }) { note ->
+                        NoteCard(note = note, onClick = { onEditClick(note) })
+                    }
                 }
             }
         }
 
-        // Save Button
+
         FilledIconButton(
             onClick = {
                 onAddClick()
@@ -167,7 +187,7 @@ fun EmptyListScreenPreviewDark() {
 }
 
 @Composable
-fun EmptyNotesView() {
+fun EmptyNotesView(isSearching: Boolean = false) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -185,13 +205,13 @@ fun EmptyNotesView() {
                 tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
             )
             Text(
-                text = "No Notes Yet",
+                text = if (isSearching) "No matches" else "No Notes Yet",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
             )
             Text(
-                text = "Tap the + button to create your first note",
+                text = if (isSearching) "Try a different search" else "Tap the + button to create your first note",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
             )
