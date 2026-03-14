@@ -27,7 +27,6 @@ class AddViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _uiState.value = UIState.Loading
-                delay(1000)
                 repository.add(note)
                 _uiState.value = UIState.Success(Unit)
                 navigationManager.showSnackBar("Note Saved")

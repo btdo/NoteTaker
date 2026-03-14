@@ -46,14 +46,16 @@ fun navigateToRoute(
     navController: NavController
 ) {
     try {
-        navController.navigate(navigationState.command.path) {
-            // Avoid multiple copies of the same destination when
-            // reselecting the same item
+        val path = navigationState.command.path
+        val isAlreadyInStack = isRouteInBackStack(navController, path)
+        navController.navigate(path) {
             launchSingleTop = true
-            // Restore state when reselecting a previously selected item
             restoreState = true
+            if (isAlreadyInStack) {
+                popUpTo(path) { inclusive = false }
+            }
             if (navigationState.command.clearBackStack) {
-                popUpTo(navController.graph.id) {
+                popUpTo(navController.graph.startDestinationId) {
                     inclusive = true
                 }
             }
@@ -61,4 +63,23 @@ fun navigateToRoute(
     } catch (e: Exception) {
         Timber.e(e, "Error while navigating to ${navigationState.command.path}")
     }
+}
+
+/**
+ * Checks if a route is already in the back stack using public NavController API.
+ * Uses [NavController.getBackStackEntry] with destination IDs from the graph.
+ */
+private fun isRouteInBackStack(navController: NavController, path: String): Boolean {
+    val pathBase = path.substringBefore("/")
+    for (node in navController.graph) {
+        val nodeRouteBase = node.route?.substringBefore("/") ?: continue
+        if (nodeRouteBase != pathBase) continue
+        return try {
+            navController.getBackStackEntry(node.id)
+            true
+        } catch (_: IllegalArgumentException) {
+            false
+        }
+    }
+    return false
 }

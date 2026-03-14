@@ -29,7 +29,6 @@ class EditViewModel @Inject constructor(
             try {
                 _uiState.value = UIState.Loading
                 _note.value =  note
-                delay(2000)
                 repository.edit(note)
                 _uiState.value = UIState.Success(Unit)
                 navigationManager.showSnackBar("Note Saved")
@@ -43,7 +42,6 @@ class EditViewModel @Inject constructor(
     suspend fun getEditNote(noteId: Int): Note? {
         try {
             _uiState.value = UIState.Loading
-            delay(2000)
             val note = repository.get(noteId)
             _note.value = note
             _uiState.value = UIState.Success(Unit)

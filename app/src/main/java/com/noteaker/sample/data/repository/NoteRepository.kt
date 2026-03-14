@@ -8,8 +8,8 @@ import com.noteaker.sample.data.model.NoteEntity
 import com.noteaker.sample.di.IoDispatcher
 import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.domain.model.toEntity
-import dagger.hilt.android.scopes.ActivityRetainedScoped
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -26,7 +26,7 @@ interface NoteRepository {
     suspend fun get(id: Int) : Note
 }
 
-@ActivityRetainedScoped
+
 class MyNoteRepository @Inject constructor(
     private val database: AppDatabase,
     private val noteDao: NoteDao,
@@ -47,6 +47,7 @@ class MyNoteRepository @Inject constructor(
         }
 
     override suspend fun add(note: Note) = withContext(dispatcher) {
+        delay(1000)
         database.withTransaction {
             val noteId = noteDao.insert(note.toEntity())
             note.attachments.forEach { attachmentDao.insert(it.toEntity(noteId)) }
@@ -54,6 +55,7 @@ class MyNoteRepository @Inject constructor(
     }
 
     override suspend fun edit(note: Note) = withContext(dispatcher) {
+        delay(2000)
         database.withTransaction {
             val entity = note.toEntity()
             noteDao.update(entity)
@@ -67,6 +69,7 @@ class MyNoteRepository @Inject constructor(
     }
 
     override suspend fun get(id: Int): Note {
+        delay(2000)
         noteDao.getById(id.toLong())?.let {
             val attachments = attachmentDao.getByNoteIdOnce(it.id).map { it.toAttachment() }
             return it.toNote(attachments)
