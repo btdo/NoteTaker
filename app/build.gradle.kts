@@ -20,6 +20,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("boolean", "AI_NAVIGATION_USE_LOCAL", "false")
     }
 
     buildTypes {
@@ -62,6 +64,7 @@ dependencies {
     // Firebase AI (Gemini) – BOM 34.x includes firebase-ai
     implementation(platform("com.google.firebase:firebase-bom:34.10.0"))
     implementation("com.google.firebase:firebase-ai")
+    implementation("com.google.mlkit:genai-prompt:1.0.0-beta1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

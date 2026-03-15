@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -51,6 +52,7 @@ class ListViewModel @Inject constructor(
                 "User tapped the Add button to add a new note."
             ).onFailure {
                 // Fallback: navigate directly if AI call fails (e.g. no network)
+                Timber.e(it, "Failed to process add note intent, use fallback navigation")
                 navigationManager.navigate(NavState.NavigateToRoute(NavigationCommand(AddRoute.path)))
             }
         }
@@ -61,6 +63,7 @@ class ListViewModel @Inject constructor(
             navigationOrchestrator.processUserIntent(
                 "User tapped on note with id ${note.id} to edit it."
             ).onFailure {
+                Timber.e(it, "Failed to process edit note intent, use fallback navigation")
                 navigationManager.navigate(NavState.NavigateToRoute(EditRoute.getRoute(note.id)))
             }
         }
