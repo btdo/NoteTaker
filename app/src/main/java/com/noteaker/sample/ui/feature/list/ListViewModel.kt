@@ -2,6 +2,7 @@ package com.noteaker.sample.ui.feature.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.noteaker.sample.ai.NavigationOrchestrator
 import com.noteaker.sample.data.repository.NoteRepository
 import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.navigation.NavState
@@ -18,12 +19,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ListViewModel @Inject constructor(
     private val repository: NoteRepository,
-    private val navigationManager: NavigationManager
+    private val navigationManager: NavigationManager,
+    private val navigationOrchestrator: NavigationOrchestrator
 ) : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -43,11 +46,24 @@ class ListViewModel @Inject constructor(
         )
 
     fun addClick() {
-        navigationManager.navigate(NavState.NavigateToRoute(NavigationCommand(AddRoute.path)))
+        viewModelScope.launch {
+            navigationOrchestrator.processUserIntent(
+                "User tapped the Add button to add a new note."
+            ).onFailure {
+                // Fallback: navigate directly if AI call fails (e.g. no network)
+                navigationManager.navigate(NavState.NavigateToRoute(NavigationCommand(AddRoute.path)))
+            }
+        }
     }
 
     fun onEditClick(note: Note) {
-        navigationManager.navigate(NavState.NavigateToRoute(EditRoute.getRoute(note.id)))
+        viewModelScope.launch {
+            navigationOrchestrator.processUserIntent(
+                "User tapped on note with id ${note.id} to edit it."
+            ).onFailure {
+                navigationManager.navigate(NavState.NavigateToRoute(EditRoute.getRoute(note.id)))
+            }
+        }
     }
 
     fun onSearchQuery(searchQuery: String) {
