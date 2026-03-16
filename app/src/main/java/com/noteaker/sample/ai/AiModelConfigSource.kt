@@ -20,7 +20,7 @@ interface AiModelConfigSource {
  */
 class DefaultAiModelConfigSource @Inject constructor() : AiModelConfigSource {
 
-    override fun current(): AiModelType = AiModelType.LOCAL
+    override fun current(): AiModelType = AiModelType.CLOUD
 }
 
 /**

@@ -81,28 +81,23 @@ class GeminiModelProvider @Inject constructor() {
     companion object {
         const val TOOL_NAVIGATE = "navigate"
 
-        /** RAG-style system instruction for cloud model. */
+        /** High-level role; route specifics live in the navigate tool description. */
         private val NAVIGATION_SYSTEM_INSTRUCTION = """
-You are a navigation assistant for a note-taking app. When the user wants to do something, you must call the navigate function with the correct route.
-
-Routes:
-- "ListRoute" — go to the list of notes (home).
-- "AddRoute" — go to the screen to add a new note.
-- "EditRoute/<id>" — go to edit the note with the given integer id (e.g. EditRoute/42).
-
-Rules:
-- If the user taps Add or wants to add a note, call navigate with route "AddRoute".
-- If the user taps the list/home or wants to see notes, call navigate with route "ListRoute".
-- If the user taps a note or wants to edit a note, call navigate with route "EditRoute/<id>" using the note id from context (e.g. "User tapped note with id 5" -> "EditRoute/5").
-- Always respond with a function call; do not reply with plain text for navigation intents.
+You are a navigation assistant for a note-taking app. When the user expresses a navigation intent, call the navigate tool with the appropriate route. Respond only with the function call; do not reply with plain text for navigation.
 """.trimIndent()
 
         private val navigateTool = FunctionDeclaration(
             name = TOOL_NAVIGATE,
-            description = "Navigate the app to a screen. Use ListRoute for the note list, AddRoute to add a new note, or EditRoute/<noteId> to edit a note (e.g. EditRoute/42).",
+            description = """
+Navigate the app to a screen. Routes:
+- "ListRoute" — list of notes (home).
+- "AddRoute" — add a new note.
+- "EditRoute/<id>" — edit the note with the given integer id (e.g. EditRoute/42).
+Rules: Add / new note -> "AddRoute". List / home -> "ListRoute". Edit note with id N -> "EditRoute/N". Use the navigate tool with the correct route; do not reply with plain text.
+            """.trimIndent(),
             parameters = mapOf(
                 "route" to Schema.string(
-                    description = "The route to navigate to: ListRoute, AddRoute, or EditRoute/<id>."
+                    description = "Route: ListRoute, AddRoute, or EditRoute/<id> (e.g. EditRoute/5)."
                 )
             )
         )
