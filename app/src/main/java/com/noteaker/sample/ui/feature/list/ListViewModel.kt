@@ -1,9 +1,12 @@
 package com.noteaker.sample.ui.feature.list
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.noteaker.sample.ai.NavigationOrchestrator
+import com.noteaker.sample.data.model.ZenQuotes
 import com.noteaker.sample.data.repository.NoteRepository
+import com.noteaker.sample.data.repository.QuoteRepository
 import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.navigation.NavState
 import com.noteaker.sample.navigation.NavigationCommand
@@ -11,13 +14,19 @@ import com.noteaker.sample.navigation.NavigationManager
 import com.noteaker.sample.ui.navigation.AddRoute
 import com.noteaker.sample.ui.navigation.EditRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -27,10 +36,21 @@ import javax.inject.Inject
 class ListViewModel @Inject constructor(
     private val repository: NoteRepository,
     private val navigationManager: NavigationManager,
-    private val navigationOrchestrator: NavigationOrchestrator
+    private val navigationOrchestrator: NavigationOrchestrator,
+    private val quoteRepository: QuoteRepository
 ) : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    val quotes = flow<ZenQuotes.ZenQuotesItem?> {
+        for (i in 0 until 5) {
+            val quotes = quoteRepository.getQuote()
+            emit(quotes[0])
+            delay(120000)
+        }
+    }.catch { e ->
+        emit(null)
+    }
 
     @OptIn(FlowPreview::class)
     val searchResults: StateFlow<List<Note>> =

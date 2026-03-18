@@ -1,20 +1,28 @@
 package com.noteaker.sample.ui.feature.list
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.FormatQuote
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -29,9 +37,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.noteaker.sample.data.model.ZenQuotes
 import com.noteaker.sample.domain.model.Attachment
 import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.ui.theme.NoteTakerTheme
@@ -43,7 +53,12 @@ fun ListSearchScreen(viewModel: ListViewModel) {
     val isSearching by remember {
         derivedStateOf { searchQuery.isNotEmpty() }
     }
+
+    val quote by viewModel.quotes.collectAsStateWithLifecycle(null)
     Column(modifier = Modifier.fillMaxSize()) {
+        quote?.let {
+            ZenQuoteBox(it, modifier = Modifier.padding(16.dp))
+        }
         OutlinedTextField(
             value = searchQuery,
             onValueChange = viewModel::onSearchQuery,
@@ -60,6 +75,65 @@ fun ListSearchScreen(viewModel: ListViewModel) {
             onEditClick = viewModel::onEditClick,
             isSearching = isSearching
         )
+    }
+}
+
+@Composable
+fun ZenQuoteBox(quote: ZenQuotes.ZenQuotesItem, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceTint
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 6.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.FormatQuote,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = quote.q,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.inverseOnSurface,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = "— ${quote.a}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.8f)
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun ZenQuoteBoxPreview() {
+    NoteTakerTheme {
+        ZenQuoteBox(ZenQuotes.ZenQuotesItem(q = "Successful people tend to become more successful because they are always thinking about their successes.", a = "Brian Tracy", h= "<blockquote>&ldquo;Successful people tend to become more successful because they are always thinking about their successes.&rdquo; &mdash; <footer>Brian Tracy</footer></blockquote>"))
     }
 }
 
