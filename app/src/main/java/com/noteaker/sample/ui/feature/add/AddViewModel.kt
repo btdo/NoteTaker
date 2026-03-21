@@ -19,16 +19,14 @@ class AddViewModel @Inject constructor(
     private val repository: NoteRepository,
     private val navigationManager: NavigationManager
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow<UIState>(UIState.Success(Unit))
     val uiState: StateFlow<UIState> = _uiState.asStateFlow()
-
     fun onSave(note: Note) {
         viewModelScope.launch {
             try {
-                _uiState.value = UIState.Loading
+                val success = _uiState.compareAndSet(UIState.Success(Unit), UIState.Loading)
+                if (!success) return@launch
                 repository.add(note)
-                _uiState.value = UIState.Success(Unit)
                 navigationManager.showSnackBar("Note Saved")
                 navigationManager.popBackStack()
             } catch (e: Exception) {

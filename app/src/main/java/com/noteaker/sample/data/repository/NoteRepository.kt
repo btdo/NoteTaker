@@ -26,7 +26,6 @@ interface NoteRepository {
     suspend fun get(id: Int) : Note
 }
 
-
 class MyNoteRepository @Inject constructor(
     private val database: AppDatabase,
     private val noteDao: NoteDao,
@@ -47,7 +46,7 @@ class MyNoteRepository @Inject constructor(
         }
 
     override suspend fun add(note: Note) = withContext(dispatcher) {
-        delay(1000)
+        delay(500)
         database.withTransaction {
             val noteId = noteDao.insert(note.toEntity())
             note.attachments.forEach { attachmentDao.insert(it.toEntity(noteId)) }
@@ -55,24 +54,27 @@ class MyNoteRepository @Inject constructor(
     }
 
     override suspend fun edit(note: Note) = withContext(dispatcher) {
-        delay(2000)
+        delay(500)
         database.withTransaction {
             val entity = note.toEntity()
             noteDao.update(entity)
-            attachmentDao.deleteByNoteId(entity.id)
+            attachmentDao.deleteByNoteId(note.id.toLong())
             note.attachments.forEach { attachmentDao.insert(it.toEntity(entity.id)) }
         }
     }
 
     override suspend fun delete(note: Note) = withContext(dispatcher) {
-        noteDao.delete(note.toEntity())
+        database.withTransaction {
+            noteDao.delete(note.toEntity())
+            attachmentDao.deleteByNoteId(note.id.toLong())
+        }
     }
 
     override suspend fun get(id: Int): Note {
-        delay(2000)
-        noteDao.getById(id.toLong())?.let {
-            val attachments = attachmentDao.getByNoteIdOnce(it.id).map { it.toAttachment() }
-            return it.toNote(attachments)
+        delay(500)
+        noteDao.getById(id.toLong())?.let { note ->
+            val attachments = attachmentDao.getByNoteIdOnce(note.id).map { it.toAttachment() }
+            return note.toNote(attachments)
         }
 
         throw IllegalArgumentException("Note not found for $id")

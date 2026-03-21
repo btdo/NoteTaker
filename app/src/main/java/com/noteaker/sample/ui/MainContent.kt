@@ -11,6 +11,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.flowWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -35,12 +38,15 @@ fun MainContent(
     navigationManager: NavigationManager
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    LaunchedEffect(Unit) {
-        Timber.d("MainContent: Starting snackbar collection")
-        navigationManager.snackBar.collect { message ->
-            snackbarHostState.showSnackbar(message)
-        }
+    LaunchedEffect(lifecycleOwner) {
+        Timber.d("MainContent: Starting lifecycle-aware snackbar collection")
+        navigationManager.snackBar
+            .flowWithLifecycle(lifecycleOwner.lifecycle, Lifecycle.State.STARTED)
+            .collect { message ->
+                snackbarHostState.showSnackbar(message)
+            }
     }
 
     Scaffold(modifier = Modifier.fillMaxSize(), snackbarHost = {

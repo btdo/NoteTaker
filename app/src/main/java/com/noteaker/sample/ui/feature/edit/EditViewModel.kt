@@ -7,7 +7,6 @@ import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.navigation.NavigationManager
 import com.noteaker.sample.ui.model.UIState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,15 +26,22 @@ class EditViewModel @Inject constructor(
     fun onSave(note: Note) {
         viewModelScope.launch {
             try {
-                _uiState.value = UIState.Loading
-                _note.value =  note
+                val success = _uiState.compareAndSet(UIState.Success(Unit), UIState.Loading)
+                if (!success) return@launch
+                _note.value = note
                 repository.edit(note)
-                _uiState.value = UIState.Success(Unit)
                 navigationManager.showSnackBar("Note Saved")
                 navigationManager.popBackStack()
             } catch (e: Exception) {
                 _uiState.value = UIState.Error(e.message ?: "Failed to save note")
             }
+        }
+    }
+
+    fun onDelete(note: Note) {
+        viewModelScope.launch {
+            repository.delete(note)
+            navigationManager.popBackStack()
         }
     }
 

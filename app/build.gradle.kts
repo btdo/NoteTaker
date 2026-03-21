@@ -70,6 +70,7 @@ dependencies {
     implementation("com.google.firebase:firebase-ai")
     implementation("com.google.mlkit:genai-prompt:1.0.0-beta1")
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

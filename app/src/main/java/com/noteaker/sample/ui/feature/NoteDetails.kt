@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.Card
@@ -48,6 +49,7 @@ fun NoteDetailsScreen(
     onMicrophoneClick: () -> Unit,
     onCameraClick: () -> Unit,
     onCancelClick: () -> Unit,
+    onDeleteClick: (note: Note) -> Unit = {},
     onSaveClick: (note: Note) -> Unit
 ) {
     var title by remember(note) { mutableStateOf(note?.title ?: "") }
@@ -92,9 +94,8 @@ fun NoteDetailsScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AttachmentButtons(onMicrophoneClick, onCameraClick)
-
-                // Cancel/Save Buttons
-                MainButtons(onCancelClick, onSaveClick, note, title, content)
+                // Cancel/Delete/Save Buttons
+                ActionButtons(onCancelClick , onSaveClick, note, title, content)
             }
         }
     }
@@ -134,7 +135,7 @@ private fun AttachmentButtons(onMicrophoneClick: () -> Unit, onCameraClick: () -
 }
 
 @Composable
-private fun MainButtons(
+private fun ActionButtons(
     onCancelClick: () -> Unit,
     onSaveClick: (Note) -> Unit,
     note: Note?,
@@ -153,7 +154,7 @@ private fun MainButtons(
         ) {
             Icon(
                 imageVector = Icons.Filled.Cancel,
-                contentDescription = "Save Note",
+                contentDescription = "Cancel",
                 modifier = Modifier.size(28.dp)
             )
         }
@@ -218,7 +219,7 @@ private fun ColumnScope.DetailsContent(content: String, onContentChange: (String
 }
 
 @Composable
-fun DetailsHeader(title: String) {
+fun DetailsHeader(title: String, onDeleteClick: (() -> Unit)? = null) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -230,14 +231,23 @@ fun DetailsHeader(title: String) {
             color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.weight(1f))
-        // Accent dot
-        Card(
-            modifier = Modifier.size(12.dp),
-            shape = RoundedCornerShape(50),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.tertiary
-            )
-        ) {}
+        // delete button
+        onDeleteClick?.let {
+            FilledIconButton(
+                onClick = onDeleteClick,
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = Color.Gray,
+                    contentColor = Color.White
+                ),
+                modifier = Modifier.size(56.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "Delete",
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
     }
 }
 
@@ -288,8 +298,8 @@ fun NoteDetailsScreenPreviewLight() {
             onSaveClick = {},
             onMicrophoneClick = {},
             onCameraClick = {},
-            onCancelClick = {}, header = {
-                DetailsHeader("Add Note")
+            onCancelClick = {}, onDeleteClick = {}, header = {
+                DetailsHeader("Add Note"){}
             })
     }
 }
@@ -302,8 +312,8 @@ fun NoteDetailsScreenPreviewDark() {
             onSaveClick = {},
             onMicrophoneClick = {},
             onCameraClick = {},
-            onCancelClick = {}, header = {
-                DetailsHeader("Add Note")
+            onCancelClick = {}, onDeleteClick = {} , header = {
+                DetailsHeader("Add Note") {}
             })
     }
 }

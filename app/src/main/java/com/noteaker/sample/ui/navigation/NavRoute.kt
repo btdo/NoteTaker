@@ -113,10 +113,9 @@ object AddRoute : NavRoute<AddViewModel> {
         viewModel: AddViewModel
     ) {
         val uiState by viewModel.uiState.collectAsStateLifeCycle()
-
         Box(modifier = Modifier.fillMaxSize()) {
             NoteDetailsScreen(
-                header = { DetailsHeader("Add Note") },
+                header = { DetailsHeader("Add Note")},
                 additionalNote = {
                     if (uiState is UIState.Error) {
                         Text(
@@ -173,7 +172,11 @@ object EditRoute : NavRoute<EditViewModel> {
 
         Box(modifier = Modifier.fillMaxSize()) {
             NoteDetailsScreen(
-                header = { DetailsHeader("Edit Note") },
+                header = { DetailsHeader("Edit Note") {
+                    note?.let {
+                        viewModel.onDelete(it)
+                    }
+                }},
                 additionalNote = {
                     if (uiState is UIState.Error) {
                         Text(
@@ -184,6 +187,7 @@ object EditRoute : NavRoute<EditViewModel> {
                 note = note,
                 onMicrophoneClick = {},
                 onCameraClick = {},
+                onDeleteClick = viewModel::onDelete,
                 onCancelClick = viewModel::onCancel,
                 onSaveClick = viewModel::onSave
             )
