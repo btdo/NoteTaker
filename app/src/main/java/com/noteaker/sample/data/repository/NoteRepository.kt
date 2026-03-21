@@ -6,6 +6,7 @@ import com.noteaker.sample.data.dao.NoteDao
 import com.noteaker.sample.data.database.AppDatabase
 import com.noteaker.sample.data.model.NoteEntity
 import com.noteaker.sample.di.IoDispatcher
+import com.noteaker.sample.domain.model.Attachment
 import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.domain.model.toEntity
 import kotlinx.coroutines.CoroutineDispatcher
@@ -20,10 +21,10 @@ interface NoteRepository {
 
     val noteList: Flow<List<Note>>
 
-    suspend fun add(note: Note)
+    suspend fun add(note: Note): Note
     suspend fun edit(note: Note)
     suspend fun delete(note: Note)
-    suspend fun get(id: Int) : Note
+    suspend fun get(id: Int): Note
 }
 
 class MyNoteRepository @Inject constructor(
@@ -45,12 +46,25 @@ class MyNoteRepository @Inject constructor(
             }
         }
 
-    override suspend fun add(note: Note) = withContext(dispatcher) {
+    override suspend fun add(note: Note): Note = withContext(dispatcher) {
         delay(500)
-        database.withTransaction {
-            val noteId = noteDao.insert(note.toEntity())
-            note.attachments.forEach { attachmentDao.insert(it.toEntity(noteId)) }
+        return@withContext database.withTransaction {
+            addImpl(note)
         }
+    }
+
+    suspend fun addImpl(note: Note): Note = withContext(dispatcher) {
+        var newNote: Note? = null
+        var attachments: MutableList<Attachment>? = null
+        val noteId = noteDao.insert(note.toEntity())
+        note.attachments.forEach {
+            if (attachments == null) attachments = mutableListOf()
+            val attachmentId = attachmentDao.insert(it.toEntity(noteId))
+            attachments?.add(it.copy(id = attachmentId))
+        }
+        newNote = note.copy(id = noteId, attachments = attachments ?: emptyList())
+        if (newNote == null) throw Exception("Failed to add note")
+        return@withContext newNote
     }
 
     override suspend fun edit(note: Note) = withContext(dispatcher) {

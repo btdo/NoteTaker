@@ -14,7 +14,7 @@ data class NoteEntity(
     val lastUpdated: Long
 ) {
     fun toNote(attachments: List<Attachment>): Note = Note(
-        id = id.toInt(),
+        id = id,
         title = title,
         note = note,
         lastUpdated = lastUpdated,

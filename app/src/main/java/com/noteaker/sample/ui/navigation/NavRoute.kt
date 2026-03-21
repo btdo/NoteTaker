@@ -252,7 +252,7 @@ sealed class TopBarItem(
     open val contentDescription: String,
     open val route: NavRoute<*>
 ) {
-    object Something : TopBarItem(
+    object Home : TopBarItem(
         icon = Icons.Filled.Home,
         text = null,
         contentDescription = "Home",

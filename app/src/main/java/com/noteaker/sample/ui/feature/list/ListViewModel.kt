@@ -84,7 +84,7 @@ class ListViewModel @Inject constructor(
                 "User tapped on note with id ${note.id} to edit it."
             ).onFailure {
                 Timber.e(it, "Failed to process edit note intent, use fallback navigation")
-                navigationManager.navigate(NavState.NavigateToRoute(EditRoute.getRoute(note.id)))
+                navigationManager.navigate(NavState.NavigateToRoute(EditRoute.getRoute(note.id.toInt())))
             }
         }
     }
