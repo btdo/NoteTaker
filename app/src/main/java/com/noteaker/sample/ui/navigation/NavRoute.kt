@@ -125,7 +125,7 @@ object AddRoute : NavRoute<AddViewModel> {
                     }
                 },
                 note = null,
-                onMicrophoneClick = {},
+                onFileClick = {},
                 onCameraClick = {},
                 onCancelClick = viewModel::onCancel,
                 onSaveClick = viewModel::onSave
@@ -185,9 +185,8 @@ object EditRoute : NavRoute<EditViewModel> {
                     }
                 },
                 note = note,
-                onMicrophoneClick = {},
+                onFileClick = {},
                 onCameraClick = {},
-                onDeleteClick = viewModel::onDelete,
                 onCancelClick = viewModel::onCancel,
                 onSaveClick = viewModel::onSave
             )

@@ -46,9 +46,9 @@ class MyNoteRepository @Inject constructor(
             }
         }
 
-    override suspend fun add(note: Note): Note = withContext(dispatcher) {
+    override suspend fun add(note: Note): Note {
         delay(500)
-        return@withContext database.withTransaction {
+        return database.withTransaction {
             addImpl(note)
         }
     }
@@ -63,18 +63,21 @@ class MyNoteRepository @Inject constructor(
             attachments?.add(it.copy(id = attachmentId))
         }
         newNote = note.copy(id = noteId, attachments = attachments ?: emptyList())
-        if (newNote == null) throw Exception("Failed to add note")
         return@withContext newNote
     }
 
     override suspend fun edit(note: Note) = withContext(dispatcher) {
         delay(500)
-        database.withTransaction {
-            val entity = note.toEntity()
-            noteDao.update(entity)
-            attachmentDao.deleteByNoteId(note.id.toLong())
-            note.attachments.forEach { attachmentDao.insert(it.toEntity(entity.id)) }
+        return@withContext database.withTransaction {
+            editImpl(note)
         }
+    }
+
+    suspend fun editImpl(note: Note) {
+        val entity = note.toEntity()
+        noteDao.update(entity)
+        attachmentDao.deleteByNoteId(note.id)
+        note.attachments.forEach { attachmentDao.insert(it.toEntity(entity.id)) }
     }
 
     override suspend fun delete(note: Note) = withContext(dispatcher) {

@@ -1,6 +1,5 @@
 package com.noteaker.sample.ui.feature.list
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.noteaker.sample.ai.NavigationOrchestrator
@@ -14,10 +13,8 @@ import com.noteaker.sample.navigation.NavigationManager
 import com.noteaker.sample.ui.navigation.AddRoute
 import com.noteaker.sample.ui.navigation.EditRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +23,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -58,7 +54,12 @@ class ListViewModel @Inject constructor(
             val q = query.trim()
             if (q.isEmpty()) notes
             else notes.filter {
-                it.note.contains(q, ignoreCase = true) || it.title.contains(q, ignoreCase = true)
+                it.note.contains(q, ignoreCase = true) || it.title.contains(
+                    q,
+                    ignoreCase = true
+                ) || it.attachments.filter { attachment ->
+                    (attachment.displayName ?: "").contains(q, ignoreCase = true)
+                }.isNotEmpty()
             }
         }.stateIn(
             viewModelScope,

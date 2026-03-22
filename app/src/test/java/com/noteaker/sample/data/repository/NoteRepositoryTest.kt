@@ -54,7 +54,7 @@ class NoteRepositoryTest {
             attachmentDao.insert(any())
         } returns newAttachmentId
 
-        val attachment  = Attachment(0, "file://test.file", "My File", "text")
+        val attachment = Attachment(0, "file://test.file", "My File", "text")
         val attachments = listOf(attachment)
         val note = Note(title = "Test", note = "Test Note", attachments = attachments)
         val newNote = noteRepository.addImpl(note)
@@ -72,5 +72,39 @@ class NoteRepositoryTest {
 
         assertEquals(expectedNote, newNote)
         assertEquals(expectedAttachment, newNote.attachments[0])
+    }
+
+    @Test
+    fun testEditNoteWithEmptyAttachments() = runTest {
+        val note = Note(title = "Test", note = "Test Note", attachments = emptyList())
+        noteRepository.editImpl(note)
+        coVerify {
+            noteDao.update(note.toEntity())
+        }
+        coVerify(exactly = 1) {
+            attachmentDao.deleteByNoteId(note.id)
+        }
+        coVerify(exactly = 0) {
+            attachmentDao.insert(any())
+        }
+    }
+
+    @Test
+    fun testEditNoteWithOneAttachment() = runTest {
+        val note = Note(
+            title = "Test",
+            note = "Test Note",
+            attachments = listOf(Attachment(123, "file://test.file", "My File", "text"))
+        )
+        noteRepository.editImpl(note)
+        coVerify {
+            noteDao.update(note.toEntity())
+        }
+        coVerify(exactly = 1) {
+            attachmentDao.deleteByNoteId(note.id)
+        }
+        coVerify(exactly = 1) {
+            attachmentDao.insert(any())
+        }
     }
 }

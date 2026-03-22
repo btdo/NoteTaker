@@ -46,10 +46,9 @@ fun NoteDetailsScreen(
     header: @Composable () -> Unit,
     additionalNote: @Composable () -> Unit = {},
     note: Note? = null,
-    onMicrophoneClick: () -> Unit,
+    onFileClick: () -> Unit,
     onCameraClick: () -> Unit,
     onCancelClick: () -> Unit,
-    onDeleteClick: (note: Note) -> Unit = {},
     onSaveClick: (note: Note) -> Unit
 ) {
     var title by remember(note) { mutableStateOf(note?.title ?: "") }
@@ -93,7 +92,7 @@ fun NoteDetailsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                AttachmentButtons(onMicrophoneClick, onCameraClick)
+                AttachmentButtons(onFileClick, onCameraClick)
                 // Cancel/Delete/Save Buttons
                 ActionButtons(onCancelClick , onSaveClick, note, title, content)
             }
@@ -162,7 +161,7 @@ private fun ActionButtons(
         // Save Button
         FilledIconButton(
             onClick = {
-                onSaveClick(Note(id = note?.id ?: 0, title = title, note = content))
+                onSaveClick(Note(id = note?.id ?: 0, title = title, note = content, attachments = note?.attachments ?: emptyList()))
             },
             enabled = title.isNotBlank() && content.isNotBlank(),
             colors = IconButtonDefaults.filledIconButtonColors(
@@ -296,9 +295,9 @@ fun NoteDetailsScreenPreviewLight() {
     NoteTakerTheme(darkTheme = false) {
         NoteDetailsScreen(
             onSaveClick = {},
-            onMicrophoneClick = {},
+            onFileClick = {},
             onCameraClick = {},
-            onCancelClick = {}, onDeleteClick = {}, header = {
+            onCancelClick = {}, header = {
                 DetailsHeader("Add Note"){}
             })
     }
@@ -310,9 +309,9 @@ fun NoteDetailsScreenPreviewDark() {
     NoteTakerTheme(darkTheme = true) {
         NoteDetailsScreen(
             onSaveClick = {},
-            onMicrophoneClick = {},
+            onFileClick = {},
             onCameraClick = {},
-            onCancelClick = {}, onDeleteClick = {} , header = {
+            onCancelClick = {} , header = {
                 DetailsHeader("Add Note") {}
             })
     }
