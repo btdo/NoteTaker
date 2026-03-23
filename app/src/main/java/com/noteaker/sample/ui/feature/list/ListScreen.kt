@@ -1,7 +1,6 @@
 package com.noteaker.sample.ui.feature.list
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,14 +41,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.noteaker.sample.data.model.ZenQuotes
-import com.noteaker.sample.domain.model.Attachment
-import com.noteaker.sample.domain.model.Note
+import com.noteaker.sample.ui.model.AttachmentUI
+import com.noteaker.sample.ui.model.NoteUI
 import com.noteaker.sample.ui.theme.NoteTakerTheme
 
 @Composable
 fun ListSearchScreen(viewModel: ListViewModel) {
     val notes by viewModel.searchResults.collectAsStateWithLifecycle(listOf())
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val selectedNoteIds by viewModel.selectedNoteIds.collectAsStateWithLifecycle()
     val isSearching by remember {
         derivedStateOf { searchQuery.isNotEmpty() }
     }
@@ -71,8 +71,10 @@ fun ListSearchScreen(viewModel: ListViewModel) {
 
         ListScreen(
             notes = notes,
+            selectedNoteIds = selectedNoteIds,
             onAddClick = viewModel::addClick,
             onEditClick = viewModel::onEditClick,
+            onSelectionChange = viewModel::onSelectionChange,
             isSearching = isSearching
         )
     }
@@ -133,17 +135,24 @@ fun ZenQuoteBox(quote: ZenQuotes.ZenQuotesItem, modifier: Modifier = Modifier) {
 @Composable
 fun ZenQuoteBoxPreview() {
     NoteTakerTheme {
-        ZenQuoteBox(ZenQuotes.ZenQuotesItem(q = "Successful people tend to become more successful because they are always thinking about their successes.", a = "Brian Tracy", h= "<blockquote>&ldquo;Successful people tend to become more successful because they are always thinking about their successes.&rdquo; &mdash; <footer>Brian Tracy</footer></blockquote>"))
+        ZenQuoteBox(
+            ZenQuotes.ZenQuotesItem(
+                q = "Successful people tend to become more successful because they are always thinking about their successes.",
+                a = "Brian Tracy",
+                h = "<blockquote>&ldquo;Successful people tend to become more successful because they are always thinking about their successes.&rdquo; &mdash; <footer>Brian Tracy</footer></blockquote>"
+            )
+        )
     }
 }
 
 @Composable
 fun ListScreen(
-    notes: List<Note>,
+    notes: List<NoteUI>,
+    selectedNoteIds: Set<Long> = emptySet(),
     isSearching: Boolean = false,
     onAddClick: () -> Unit = {},
-    onEditClick: (note: Note) -> Unit = {},
-
+    onEditClick: (note: NoteUI) -> Unit = {},
+    onSelectionChange: (noteId: Long, isSelected: Boolean) -> Unit = { _, _ -> }
 ) {
     Box(
         modifier = Modifier
@@ -160,7 +169,14 @@ fun ListScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(items = notes, key = { it.id }) { note ->
-                        NoteCard(note = note, onClick = { onEditClick(note) })
+                        NoteCard(
+                            note = note,
+                            isSelected = note.id in selectedNoteIds,
+                            onClick = { onEditClick(note) },
+                            onSelectionChange = { isSelected ->
+                                onSelectionChange(note.id, isSelected)
+                            }
+                        )
                     }
                 }
             }
@@ -195,34 +211,34 @@ fun ListScreen(
 fun ListScreenPreview() {
     NoteTakerTheme(darkTheme = false) {
         val notes = listOf(
-            Note(
+            NoteUI(
                 id = 1,
                 title = "Meeting Notes",
                 note = "Discussed project timeline and deliverables. Need to follow up with the team about the new requirements.",
                 lastUpdated = System.currentTimeMillis() - 3600000,
                 attachments = listOf(
-                    Attachment(uri = "file://test.pdf", displayName = "document.pdf")
+                    AttachmentUI(uri = "file://test.pdf", displayName = "document.pdf")
                 )
             ),
-            Note(
+            NoteUI(
                 id = 2,
                 title = "Shopping List",
                 note = "Milk, Eggs, Bread, Coffee, Fruits",
                 lastUpdated = System.currentTimeMillis() - 7200000
             ),
-            Note(
+            NoteUI(
                 id = 3,
                 title = "Ideas for App",
                 note = "Add dark mode support, implement search functionality, create backup feature",
                 lastUpdated = System.currentTimeMillis() - 86400000,
                 attachments = listOf(
-                    Attachment(uri = "file://sketch1.png"),
-                    Attachment(uri = "file://sketch2.png")
+                    AttachmentUI(uri = "file://sketch1.png"),
+                    AttachmentUI(uri = "file://sketch2.png")
                 )
             )
         )
 
-        ListScreen(notes) { }
+        ListScreen(notes)
     }
 }
 
@@ -231,13 +247,13 @@ fun ListScreenPreview() {
 fun ListScreenPreviewDark() {
     NoteTakerTheme(darkTheme = true) {
         val notes = listOf(
-            Note(
+            NoteUI(
                 id = 1,
                 title = "Meeting Notes",
                 note = "Discussed project timeline and deliverables. Need to follow up with the team about the new requirements.",
                 lastUpdated = System.currentTimeMillis() - 3600000
             ),
-            Note(
+            NoteUI(
                 id = 2,
                 title = "Shopping List",
                 note = "Milk, Eggs, Bread, Coffee, Fruits",
@@ -245,7 +261,9 @@ fun ListScreenPreviewDark() {
             )
         )
 
-        ListScreen(notes) { }
+        ListScreen(
+            notes = notes,
+        )
     }
 }
 
@@ -253,7 +271,9 @@ fun ListScreenPreviewDark() {
 @Composable
 fun EmptyListScreenPreview() {
     NoteTakerTheme(darkTheme = false) {
-        ListScreen(emptyList()) { }
+        ListScreen(
+            notes = emptyList(),
+        )
     }
 }
 
@@ -261,7 +281,7 @@ fun EmptyListScreenPreview() {
 @Composable
 fun EmptyListScreenPreviewDark() {
     NoteTakerTheme(darkTheme = true) {
-        ListScreen(emptyList()) { }
+        ListScreen(emptyList())
     }
 }
 

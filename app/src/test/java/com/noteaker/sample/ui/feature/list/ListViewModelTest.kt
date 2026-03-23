@@ -10,7 +10,9 @@ import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.navigation.NavState
 import com.noteaker.sample.navigation.NavigationCommand
 import com.noteaker.sample.navigation.NavigationManager
+import com.noteaker.sample.ui.model.NoteUI
 import com.noteaker.sample.ui.navigation.AddRoute
+import com.noteaker.sample.ui.navigation.EditRoute
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -82,7 +84,15 @@ class ListViewModelTest {
             navigationOrchestrator.processUserIntent(any())
         } returns Result.success(Unit)
 
-        viewModel.onEditClick(Note(1, "Test", "Test Note", System.currentTimeMillis(), emptyList()))
+        viewModel.onEditClick(
+            NoteUI(
+                1,
+                "Test",
+                "Test Note",
+                System.currentTimeMillis(),
+                emptyList()
+            )
+        )
 
         coVerify(exactly = 1) {
             navigationOrchestrator.processUserIntent(any())
@@ -150,6 +160,98 @@ class ListViewModelTest {
             assertEquals("Test", result[0].title)
             assertEquals("Test2", result[1].title)
             assertEquals("Not", result[2].title)
+        }
+    }
+
+    @Test
+    fun testOnEditClickFailure() {
+        coEvery {
+            navigationOrchestrator.processUserIntent(any())
+        } returns Result.failure(Exception("Failed to process intent"))
+
+        val note = NoteUI(42, "Title", "Body", System.currentTimeMillis(), emptyList())
+        viewModel.onEditClick(note)
+
+        coVerify(exactly = 1) {
+            navigationManager.navigate(NavState.NavigateToRoute(EditRoute.getRoute(42)))
+        }
+    }
+
+    @Test
+    fun testSearchResultsByContent() = runTest {
+        val notes = listOf(
+            Note(1, "Alpha", "Hello World", System.currentTimeMillis(), emptyList()),
+            Note(2, "Beta", "Another body", System.currentTimeMillis(), emptyList())
+        )
+        every { repository.noteList } returns flow {
+            emit(notes)
+            awaitCancellation()
+        }
+        val searchViewModel =
+            ListViewModel(repository, navigationManager, navigationOrchestrator, quoteRepository)
+
+        searchViewModel.searchResults.test {
+            assertEquals(0, awaitItem().size)
+            searchViewModel.onSearchQuery("world")
+            val result = awaitItem()
+            assertEquals(1, result.size)
+            assertEquals("Alpha", result[0].title)
+        }
+    }
+
+    @Test
+    fun testSearchIsCaseInsensitive() = runTest {
+        val notes = listOf(
+            Note(1, "Test", "body", System.currentTimeMillis(), emptyList()),
+            Note(2, "TeSt2", "body", System.currentTimeMillis(), emptyList())
+        )
+        every { repository.noteList } returns flow {
+            emit(notes)
+            awaitCancellation()
+        }
+        val searchViewModel =
+            ListViewModel(repository, navigationManager, navigationOrchestrator, quoteRepository)
+
+        searchViewModel.searchResults.test {
+            assertEquals(0, awaitItem().size)
+            searchViewModel.onSearchQuery("tEsT")
+            val result = awaitItem()
+            assertEquals(2, result.size)
+            assertEquals("Test", result[0].title)
+            assertEquals("TeSt2", result[1].title)
+        }
+    }
+
+    @Test
+    fun testWhitespaceQueryReturnsAll() = runTest {
+        val notes = listOf(
+            Note(1, "One", "aaa", System.currentTimeMillis(), emptyList()),
+            Note(2, "Two", "bbb", System.currentTimeMillis(), emptyList()),
+            Note(3, "Three", "ccc", System.currentTimeMillis(), emptyList())
+        )
+        every { repository.noteList } returns flow {
+            emit(notes)
+            awaitCancellation()
+        }
+        val searchViewModel =
+            ListViewModel(repository, navigationManager, navigationOrchestrator, quoteRepository)
+
+        searchViewModel.searchResults.test {
+            assertEquals(0, awaitItem().size)
+            searchViewModel.onSearchQuery("   ")
+            val result = awaitItem()
+            assertEquals(3, result.size)
+        }
+    }
+
+    @Test
+    fun testQuotesFlowEmitsNullOnError() = runTest {
+        coEvery { quoteRepository.getQuote() } throws Exception("network")
+
+        viewModel.quotes.test {
+            val first = awaitItem()
+            assertEquals(null, first)
+            cancelAndIgnoreRemainingEvents()
         }
     }
 }

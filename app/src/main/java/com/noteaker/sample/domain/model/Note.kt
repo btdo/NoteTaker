@@ -18,3 +18,4 @@ fun Note.toEntity(): NoteEntity = NoteEntity(
     note = note,
     lastUpdated = lastUpdated
 )
+

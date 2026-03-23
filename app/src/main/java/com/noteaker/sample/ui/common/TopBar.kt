@@ -59,8 +59,7 @@ fun NavBarItems(
     onItemClicked: (item: TopBarItem) -> Unit
 ) {
     items.forEach { action ->
-        val shouldDisplay by action.shouldDisplay.collectAsStateLifeCycle()
-        if (shouldDisplay) {
+        if (action.isDisplay) {
             IconButton(onClick = {
                 onItemClicked(action)
             }) {

@@ -9,6 +9,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -115,7 +117,7 @@ object AddRoute : NavRoute<AddViewModel> {
         val uiState by viewModel.uiState.collectAsStateLifeCycle()
         Box(modifier = Modifier.fillMaxSize()) {
             NoteDetailsScreen(
-                header = { DetailsHeader("Add Note")},
+                header = { DetailsHeader("Add Note") },
                 additionalNote = {
                     if (uiState is UIState.Error) {
                         Text(
@@ -172,11 +174,13 @@ object EditRoute : NavRoute<EditViewModel> {
 
         Box(modifier = Modifier.fillMaxSize()) {
             NoteDetailsScreen(
-                header = { DetailsHeader("Edit Note") {
-                    note?.let {
-                        viewModel.onDelete(it)
+                header = {
+                    DetailsHeader("Edit Note") {
+                        note?.let {
+                            viewModel.onDelete(it)
+                        }
                     }
-                }},
+                },
                 additionalNote = {
                     if (uiState is UIState.Error) {
                         Text(
@@ -245,12 +249,18 @@ sealed class NoteTakerView {
 }
 
 sealed class TopBarItem(
-    open val shouldDisplay: MutableStateFlow<Boolean> = MutableStateFlow(true),
     open val icon: ImageVector,
     @StringRes open val text: Int? = null,
     open val contentDescription: String,
     open val route: NavRoute<*>
 ) {
+    var isDisplay: Boolean by mutableStateOf(true)
+        private set
+
+    fun setIsDisplay(isShouldDisplay: Boolean) {
+        this.isDisplay = isShouldDisplay
+    }
+
     object Home : TopBarItem(
         icon = Icons.Filled.Home,
         text = null,
