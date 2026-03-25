@@ -2,6 +2,7 @@ package com.noteaker.sample.ui.feature.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.noteaker.sample.ai.CloudIntentProvider
 import com.noteaker.sample.ai.NavigationOrchestrator
 import com.noteaker.sample.data.model.ZenQuotes
 import com.noteaker.sample.data.repository.NoteRepository
@@ -36,7 +37,7 @@ import javax.inject.Inject
 class ListViewModel @Inject constructor(
     private val repository: NoteRepository,
     private val navigationManager: NavigationManager,
-    private val navigationOrchestrator: NavigationOrchestrator,
+    private val navigationOrchestrator: CloudIntentProvider,
     private val quoteRepository: QuoteRepository
 ) : ViewModel() {
     private val _searchQuery = MutableStateFlow("")

@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            CompositionLocalProvider(NavigationManager provides navManager) {
+            CompositionLocalProvider(LocalNavigationManager provides navManager) {
                 NoteTakerTheme {
                     BackHandler {
                         navManager.popBackStack()
@@ -35,5 +35,5 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-val NavigationManager =
+val LocalNavigationManager =
     compositionLocalOf<NavigationManager> { error("NavigationManager not set") }

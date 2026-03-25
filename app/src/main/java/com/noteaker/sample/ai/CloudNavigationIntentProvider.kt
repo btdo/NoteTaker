@@ -6,6 +6,7 @@ import com.google.firebase.ai.type.FunctionDeclaration
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.Schema
 import com.google.firebase.ai.type.Tool
+import com.noteaker.sample.ai.NavigationGeminiModelProvider.Companion.TOOL_NAVIGATE
 import com.noteaker.sample.di.IoDispatcher
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import kotlinx.coroutines.CoroutineDispatcher
@@ -18,7 +19,7 @@ import javax.inject.Inject
  */
 @ActivityRetainedScoped
 class CloudNavigationIntentProvider @Inject constructor(
-    private val geminiModelProvider: GeminiModelProvider,
+    private val geminiModelProvider: NavigationGeminiModelProvider,
     @IoDispatcher private val dispatcher: CoroutineDispatcher
 ) : NavigationIntentProvider {
 
@@ -29,7 +30,7 @@ class CloudNavigationIntentProvider @Inject constructor(
             val response = chat.sendMessage(userMessage)
 
             val functionCalls = response.functionCalls
-            val navigateCall = functionCalls.find { it.name == GeminiModelProvider.TOOL_NAVIGATE }
+            val navigateCall = functionCalls.find { it.name == TOOL_NAVIGATE }
 
             if (navigateCall != null) {
                 extractRouteFromFunctionCall(navigateCall)
@@ -66,7 +67,7 @@ class CloudNavigationIntentProvider @Inject constructor(
  * Kept separate so the model (and its tool list) can be created once and reused.
  */
 @ActivityRetainedScoped
-class GeminiModelProvider @Inject constructor() {
+class NavigationGeminiModelProvider @Inject constructor() {
 
     val model by lazy {
         FirebaseAI.getInstance(FirebaseApp.getInstance(), GenerativeBackend.googleAI()).generativeModel(
