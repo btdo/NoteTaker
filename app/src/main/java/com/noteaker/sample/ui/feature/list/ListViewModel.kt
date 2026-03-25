@@ -2,16 +2,15 @@ package com.noteaker.sample.ui.feature.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.noteaker.sample.ai.CloudIntentProvider
 import com.noteaker.sample.ai.NavigationOrchestrator
 import com.noteaker.sample.data.model.ZenQuotes
 import com.noteaker.sample.data.repository.NoteRepository
 import com.noteaker.sample.data.repository.QuoteRepository
-import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.navigation.NavState
 import com.noteaker.sample.navigation.NavigationCommand
 import com.noteaker.sample.navigation.NavigationManager
 import com.noteaker.sample.ui.model.NoteUI
+import com.noteaker.sample.ui.model.UIState
 import com.noteaker.sample.ui.navigation.AddRoute
 import com.noteaker.sample.ui.navigation.EditRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,7 +23,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -37,7 +35,7 @@ import javax.inject.Inject
 class ListViewModel @Inject constructor(
     private val repository: NoteRepository,
     private val navigationManager: NavigationManager,
-    private val navigationOrchestrator: CloudIntentProvider,
+    private val navigationOrchestrator: NavigationOrchestrator,
     private val quoteRepository: QuoteRepository
 ) : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
@@ -52,7 +50,7 @@ class ListViewModel @Inject constructor(
             emit(quotes[0])
             delay(120000)
         }
-    }.catch { e ->
+    }.catch { _ ->
         emit(null)
     }
 
@@ -96,6 +94,17 @@ class ListViewModel @Inject constructor(
             ).onFailure {
                 Timber.e(it, "Failed to process edit note intent, use fallback navigation")
                 navigationManager.navigate(NavState.NavigateToRoute(EditRoute.getRoute(note.id.toInt())))
+            }
+        }
+    }
+
+    fun onDeleteClick() {
+        viewModelScope.launch {
+            repository.deleteSelectedNotes(_selectedNoteIds.value).onSuccess {
+                navigationManager.showSnackBar("Note${if (_selectedNoteIds.value.size > 1) "s" else ""} deleted")
+                _selectedNoteIds.value = setOf()
+            }.onFailure {
+                navigationManager.showSnackBar("Failed to delete notes.  Try again later")
             }
         }
     }

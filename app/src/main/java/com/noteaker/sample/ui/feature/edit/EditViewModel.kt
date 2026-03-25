@@ -40,8 +40,12 @@ class EditViewModel @Inject constructor(
 
     fun onDelete(note: Note) {
         viewModelScope.launch {
-            repository.delete(note)
-            navigationManager.popBackStack()
+            repository.delete(note.id).onSuccess {
+                navigationManager.showSnackBar("Note Deleted")
+                navigationManager.popBackStack()
+            }.onFailure {
+                navigationManager.showSnackBar("Failed to delete note")
+            }
         }
     }
 

@@ -3,7 +3,6 @@ package com.noteaker.sample.ai
 import com.google.firebase.FirebaseApp
 import com.google.firebase.ai.FirebaseAI
 import com.google.firebase.ai.type.Content
-import com.google.firebase.ai.type.FunctionDeclaration
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.Tool
 import com.noteaker.sample.di.IoDispatcher
@@ -20,9 +19,9 @@ import javax.inject.Inject
 class CloudIntentProvider @Inject constructor(
     private val geminiModelProvider: GeminiModelProvider,
     @IoDispatcher private val dispatcher: CoroutineDispatcher
-) {
+) : NavigationIntentProvider {
 
-    suspend fun processUserIntent(userMessage: String): Result<String?> = withContext(dispatcher) {
+    override suspend fun processUserIntent(userMessage: String): Result<String?> = withContext(dispatcher) {
         runCatching {
             val model = geminiModelProvider.model
             val chat = model.startChat()
@@ -58,7 +57,7 @@ class CloudIntentProvider @Inject constructor(
 }
 
 /**
- * Provides a [GenerativeModel] configured with the navigate tool and system instruction.
+ * Provides a [GeminiModelProvider] configured with the navigate tool and system instruction.
  * Kept separate so the model (and its tool list) can be created once and reused.
  */
 @ActivityRetainedScoped

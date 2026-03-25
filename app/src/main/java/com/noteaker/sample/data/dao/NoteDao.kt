@@ -18,7 +18,7 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE id = :id")
     suspend fun getById(id: Long): NoteEntity?
 
-    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: NoteEntity): Long
 
     @Update
@@ -26,4 +26,7 @@ interface NoteDao {
 
     @Delete
     suspend fun delete(entity: NoteEntity)
+
+    @Query("DELETE FROM notes WHERE id = :noteId")
+    suspend fun deleteByNoteId(noteId: Long)
 }

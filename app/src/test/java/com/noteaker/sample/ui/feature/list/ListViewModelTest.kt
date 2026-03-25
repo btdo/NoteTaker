@@ -21,6 +21,7 @@ import io.mockk.impl.annotations.MockK
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -253,5 +254,36 @@ class ListViewModelTest {
             assertEquals(null, first)
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    @Test
+    fun testDeleteSelectedNotes() = runTest {
+        val deletedSet = setOf<Long>(1, 2)
+        val notes = listOf(
+            Note(1, "Test", "body", System.currentTimeMillis(), emptyList()),
+            Note(2, "TeSt2", "body", System.currentTimeMillis(), emptyList())
+        )
+        every { repository.noteList } returns flow {
+            emit(notes)
+            awaitCancellation()
+        }
+        val searchViewModel =
+            ListViewModel(repository, navigationManager, navigationOrchestrator, quoteRepository)
+
+        coEvery {
+            repository.deleteSelectedNotes(deletedSet)
+        } returns Result.success(Unit)
+
+        searchViewModel.onSelectionChange(1, true)
+        searchViewModel.onSelectionChange(2, true)
+        searchViewModel.onDeleteClick()
+        advanceUntilIdle()
+        coVerify(exactly = 1) {
+            repository.deleteSelectedNotes(deletedSet)
+        }
+        coVerify {
+            navigationManager.showSnackBar("Notes deleted")
+        }
+        assertEquals(emptySet<Long>(), searchViewModel.selectedNoteIds.value)
     }
 }

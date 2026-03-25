@@ -20,7 +20,7 @@ interface AiModelConfigSource {
  */
 class DefaultAiModelConfigSource @Inject constructor() : AiModelConfigSource {
 
-    override fun current(): AiModelType = AiModelType.CLOUD
+    override fun current(): AiModelType = AiModelType.CLOUD_GENERIC
 }
 
 /**
@@ -28,6 +28,7 @@ class DefaultAiModelConfigSource @Inject constructor() : AiModelConfigSource {
  * Switch at runtime (e.g. based on connectivity) by providing a different [AiModelConfigSource].
  */
 enum class AiModelType {
+    CLOUD_GENERIC,
     /** Cloud: Firebase AI (Gemini). Requires network. */
     CLOUD,
 

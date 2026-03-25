@@ -8,7 +8,7 @@ data class NoteUI(
     val id: Long = 0,
     val title: String,
     val note: String,
-    val lastUpdated: Long = System.currentTimeMillis(),
+    val lastUpdated: Long,
     val attachments: List<AttachmentUI> = emptyList()
 ) {
     companion object {

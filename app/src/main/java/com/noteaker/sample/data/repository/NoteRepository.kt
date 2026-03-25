@@ -23,8 +23,9 @@ interface NoteRepository {
 
     suspend fun add(note: Note): Note
     suspend fun edit(note: Note)
-    suspend fun delete(note: Note)
+    suspend fun delete(note: Long): Result<Unit>
     suspend fun get(id: Int): Note
+    suspend fun deleteSelectedNotes(noteIds: Set<Long>): Result<Unit>
 }
 
 class MyNoteRepository @Inject constructor(
@@ -60,7 +61,7 @@ class MyNoteRepository @Inject constructor(
         note.attachments.forEach {
             if (attachments == null) attachments = mutableListOf()
             val attachmentId = attachmentDao.insert(it.toEntity(noteId))
-            attachments?.add(it.copy(id = attachmentId))
+            attachments.add(it.copy(id = attachmentId))
         }
         newNote = note.copy(id = noteId, attachments = attachments ?: emptyList())
         return@withContext newNote
@@ -80,12 +81,26 @@ class MyNoteRepository @Inject constructor(
         note.attachments.forEach { attachmentDao.insert(it.toEntity(entity.id)) }
     }
 
-    override suspend fun delete(note: Note) = withContext(dispatcher) {
-        database.withTransaction {
-            noteDao.delete(note.toEntity())
-            attachmentDao.deleteByNoteId(note.id.toLong())
+    override suspend fun delete(note: Long): Result<Unit> = withContext(dispatcher) {
+        runCatching {
+            database.withTransaction {
+                noteDao.deleteByNoteId(note)
+                attachmentDao.deleteByNoteId(note)
+            }
         }
     }
+
+    override suspend fun deleteSelectedNotes(noteIds: Set<Long>): Result<Unit> =
+        withContext(dispatcher) {
+            runCatching {
+                database.withTransaction {
+                    noteIds.forEach { noteId ->
+                        noteDao.deleteByNoteId(noteId)
+                        attachmentDao.deleteByNoteId(noteId)
+                    }
+                }
+            }
+        }
 
     override suspend fun get(id: Int): Note {
         delay(500)

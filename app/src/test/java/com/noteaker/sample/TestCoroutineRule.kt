@@ -2,6 +2,7 @@ package com.noteaker.sample
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -25,6 +26,7 @@ class TestCoroutineRule(
 
     override fun finished(description: Description) {
         super.finished(description)
+        testScope.cancel()
         Dispatchers.resetMain()
     }
 }
