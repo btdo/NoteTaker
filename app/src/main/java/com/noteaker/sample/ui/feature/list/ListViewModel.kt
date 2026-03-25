@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -58,16 +59,35 @@ class ListViewModel @Inject constructor(
     val searchResults: StateFlow<List<NoteUI>> =
         combine(
             _searchQuery.debounce(500),
-            repository.noteList.map { it.map { note -> NoteUI.fromNote(note) } }) { query, notes ->
-            val q = query.trim()
-            if (q.isEmpty()) notes
-            else notes.filter {
-                it.note.contains(q, ignoreCase = true) || it.title.contains(
-                    q,
-                    ignoreCase = true
-                ) || it.attachments.filter { attachment ->
-                    (attachment.displayName ?: "").contains(q, ignoreCase = true)
-                }.isNotEmpty()
+            repository.noteList
+                .map { notes ->
+                    notes.map { note -> NoteUI.fromNote(note) }
+                }
+                .retry(3) { cause ->
+                    Timber.w(cause, "Error loading notes, retrying...")
+                    delay(1000) // Wait before retry
+                    true // Retry on any exception
+                }
+                .catch { e ->
+                    // After 3 retries, emit empty list and continue
+                    Timber.e(e, "Error loading notes after retries, showing empty list")
+                    emit(emptyList())
+                }
+        ) { query, notes ->
+            try {
+                val q = query.trim()
+                if (q.isEmpty()) notes
+                else notes.filter {
+                    it.note.contains(q, ignoreCase = true) || it.title.contains(
+                        q,
+                        ignoreCase = true
+                    ) || it.attachments.filter { attachment ->
+                        (attachment.displayName ?: "").contains(q, ignoreCase = true)
+                    }.isNotEmpty()
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error filtering notes")
+                emptyList()
             }
         }.stateIn(
             viewModelScope,

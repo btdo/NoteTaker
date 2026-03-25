@@ -19,10 +19,15 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.fail
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -285,5 +290,78 @@ class ListViewModelTest {
             navigationManager.showSnackBar("Notes deleted")
         }
         assertEquals(emptySet<Long>(), searchViewModel.selectedNoteIds.value)
+    }
+
+    @Test
+    fun testSearchResultsWithoutTurbine() = runTest(testCoroutineRule.testDispatcher) {
+        val notes = listOf(
+            Note(1, "Test", "Test Note", System.currentTimeMillis(), emptyList()),
+            Note(2, "Test2", "Test Note2", System.currentTimeMillis(), emptyList()),
+            Note(
+                3, "Not", "abcd", System.currentTimeMillis(), listOf(
+                    Attachment(
+                        1,
+                        "uri",
+                        "Test",
+                        "mimeType"
+                    )
+                )
+            )
+        )
+        // combine() cancels when any upstream completes; flowOf emits once then completes,
+        // so debounce never gets to emit with the notes still available.
+        every { repository.noteList } returns flow {
+            emit(notes)
+            awaitCancellation()
+        }
+        // noteList is read when ListViewModel initializes combine(...); stub before construction.
+        val searchViewModel =
+            ListViewModel(repository, navigationManager, navigationOrchestrator, quoteRepository)
+        searchViewModel.onSearchQuery("Test")
+
+        var list : List<NoteUI>? = null
+        val job = launch {
+            searchViewModel.searchResults.collect {
+                if (it.isEmpty()) {
+                    list = it
+                }
+
+            }
+        }
+
+        try {
+            withTimeout(1000) {
+                while(true) {
+                    advanceTimeBy(500)
+                    list?.let {
+                        assertEquals(3, it.size)
+                        job.cancelAndJoin()
+                        break
+                    }
+                }
+            }
+
+        } catch (e: Exception) {
+            fail("Did not assert on time")
+        }
+    }
+
+    @Test
+    fun testSearchResultsHandlesRepositoryException() = runTest {
+        // Repository throws an exception
+        every { repository.noteList } returns flow {
+            throw RuntimeException("Database corrupted!")
+        }
+
+        val errorViewModel = ListViewModel(
+            repository, navigationManager, navigationOrchestrator, quoteRepository
+        )
+
+        // With retry + catch, should emit empty list instead of crashing
+        errorViewModel.searchResults.test {
+            val result = awaitItem()
+            assertEquals(emptyList<NoteUI>(), result)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 }
