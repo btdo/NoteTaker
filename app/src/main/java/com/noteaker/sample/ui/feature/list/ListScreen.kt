@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material3.Button
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -37,11 +38,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.noteaker.sample.ui.common.ZenQuoteBox
 import com.noteaker.sample.ui.model.AttachmentUI
 import com.noteaker.sample.ui.model.NoteUI
+import com.noteaker.sample.ui.model.UIState
 import com.noteaker.sample.ui.theme.NoteTakerTheme
 
 @Composable
 fun ListSearchScreen(viewModel: ListViewModel) {
-    val notes by viewModel.searchResults.collectAsStateWithLifecycle(listOf())
+    val uiState by viewModel.searchRetry.collectAsStateWithLifecycle(UIState.Loading)
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val selectedNoteIds by viewModel.selectedNoteIds.collectAsStateWithLifecycle()
     val isSearching by remember {
@@ -63,15 +65,28 @@ fun ListSearchScreen(viewModel: ListViewModel) {
             singleLine = true
         )
 
-        ListScreen(
-            notes = notes,
-            selectedNoteIds = selectedNoteIds,
-            onAddClick = viewModel::addClick,
-            onEditClick = viewModel::onEditClick,
-            onSelectionChange = viewModel::onSelectionChange,
-            isSearching = isSearching,
-            onDeleteClick = viewModel::onDeleteClick
-        )
+        if (uiState is UIState.Success<*>) {
+            ListScreen(
+                notes = (uiState as UIState.Success<List<NoteUI>>).data,
+                selectedNoteIds = selectedNoteIds,
+                onAddClick = viewModel::addClick,
+                onEditClick = viewModel::onEditClick,
+                onSelectionChange = viewModel::onSelectionChange,
+                isSearching = isSearching,
+                onDeleteClick = viewModel::onDeleteClick
+            )
+        } else {
+            Text(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                text = "Sorry, something went wrong.  Click retry to try again."
+            )
+            Button(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                onClick = viewModel::retry
+            ) {
+                Text("Retry")
+            }
+        }
     }
 }
 
@@ -113,7 +128,11 @@ fun ListScreen(
             }
         }
 
-        Row(modifier = Modifier.align(Alignment.BottomEnd).offset(x = (-16).dp, y = (-16).dp)) {
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = (-16).dp, y = (-16).dp)
+        ) {
             if (selectedNoteIds.isNotEmpty()) {
                 FilledIconButton(
                     onClick = onDeleteClick,
