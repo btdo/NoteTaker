@@ -43,7 +43,7 @@ import com.noteaker.sample.ui.theme.NoteTakerTheme
 
 @Composable
 fun ListSearchScreen(viewModel: ListViewModel) {
-    val uiState by viewModel.searchRetry.collectAsStateWithLifecycle(UIState.Loading)
+    val uiState by viewModel.searchResultWithRetry.collectAsStateWithLifecycle(UIState.Loading)
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val selectedNoteIds by viewModel.selectedNoteIds.collectAsStateWithLifecycle()
     val isSearching by remember {
@@ -75,7 +75,7 @@ fun ListSearchScreen(viewModel: ListViewModel) {
                 isSearching = isSearching,
                 onDeleteClick = viewModel::onDeleteClick
             )
-        } else {
+        } else if (uiState is UIState.Error) {
             Text(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 text = "Sorry, something went wrong.  Click retry to try again."

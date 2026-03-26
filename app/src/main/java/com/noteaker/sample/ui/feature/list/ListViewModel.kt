@@ -56,10 +56,9 @@ class ListViewModel @Inject constructor(
         emit(null)
     }
 
-    val retryEmitter = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-
+    private val retryEmitter = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val searchResult = combine(
-        _searchQuery.debounce(300),
+        _searchQuery.debounce(500),
         repository.noteList
             .map { notes ->
                 notes.map { note -> NoteUI.fromNote(note) }
@@ -74,16 +73,21 @@ class ListViewModel @Inject constructor(
                 (attachment.displayName ?: "").contains(q, ignoreCase = true)
             }.isNotEmpty()
         }
-        UIState.Success(filteredNotes)
-    }.catch { e ->
-        UIState.Error(e.message ?: "Failed to load notes")
+
+        filteredNotes
     }
 
     @OptIn(FlowPreview::class)
-    val searchRetry: StateFlow<UIState> = retryEmitter
+    val searchResultWithRetry: StateFlow<UIState> = retryEmitter
         .onStart { emit(Unit) }
         .flatMapLatest {
-            searchResult
+            searchResult.map {
+                UIState.Success(it) as UIState
+            }.catch {
+                emit(UIState.Error(it.message ?: "Failed to load notes"))
+            }
+        }.catch {
+            emit(UIState.Error(it.message ?: "Failed to load notes"))
         }.stateIn(
             viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

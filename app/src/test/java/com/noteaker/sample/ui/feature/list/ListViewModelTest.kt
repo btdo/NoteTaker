@@ -11,6 +11,7 @@ import com.noteaker.sample.navigation.NavState
 import com.noteaker.sample.navigation.NavigationCommand
 import com.noteaker.sample.navigation.NavigationManager
 import com.noteaker.sample.ui.model.NoteUI
+import com.noteaker.sample.ui.model.UIState
 import com.noteaker.sample.ui.navigation.AddRoute
 import com.noteaker.sample.ui.navigation.EditRoute
 import io.mockk.MockKAnnotations
@@ -124,8 +125,8 @@ class ListViewModelTest {
         val searchViewModel =
             ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
-        searchViewModel.searchRetry.test {
-            assertEquals(0, awaitItem().size)
+        searchViewModel.searchResult.test {
+            assertEquals(UIState.Loading, (awaitItem() as UIState))
             searchViewModel.onSearchQuery("Test")
             val result = awaitItem()
             assertEquals(2, result.size)
@@ -160,7 +161,7 @@ class ListViewModelTest {
         val searchViewModel =
             ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
-        searchViewModel.searchRetry.test {
+        searchViewModel.searchResult.test {
             assertEquals(0, awaitItem().size)
             searchViewModel.onSearchQuery("Test")
             val result = awaitItem()
@@ -198,7 +199,7 @@ class ListViewModelTest {
         val searchViewModel =
             ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
-        searchViewModel.searchRetry.test {
+        searchViewModel.searchResult.test {
             assertEquals(0, awaitItem().size)
             searchViewModel.onSearchQuery("world")
             val result = awaitItem()
@@ -220,7 +221,7 @@ class ListViewModelTest {
         val searchViewModel =
             ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
-        searchViewModel.searchRetry.test {
+        searchViewModel.searchResult.test {
             assertEquals(0, awaitItem().size)
             searchViewModel.onSearchQuery("tEsT")
             val result = awaitItem()
@@ -244,7 +245,7 @@ class ListViewModelTest {
         val searchViewModel =
             ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
-        searchViewModel.searchRetry.test {
+        searchViewModel.searchResult.test {
             assertEquals(0, awaitItem().size)
             searchViewModel.onSearchQuery("   ")
             val result = awaitItem()
@@ -323,7 +324,7 @@ class ListViewModelTest {
 
         var list : List<NoteUI>? = null
         val job = launch {
-            searchViewModel.searchRetry.collect {
+            searchViewModel.searchResult.collect {
                 if (it.isEmpty()) {
                     list = it
                 }
@@ -360,7 +361,7 @@ class ListViewModelTest {
         )
 
         // With retry + catch, should emit empty list instead of crashing
-        errorViewModel.searchRetry.test {
+        errorViewModel.searchResultWithRetry.test {
             val result = awaitItem()
             assertEquals(emptyList<NoteUI>(), result)
             cancelAndIgnoreRemainingEvents()
