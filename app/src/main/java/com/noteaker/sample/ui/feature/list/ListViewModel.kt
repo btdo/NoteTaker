@@ -14,6 +14,7 @@ import com.noteaker.sample.ui.model.UIState
 import com.noteaker.sample.ui.navigation.AddRoute
 import com.noteaker.sample.ui.navigation.EditRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -34,6 +35,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class ListViewModel @Inject constructor(
     private val repository: NoteRepository,
@@ -77,7 +79,6 @@ class ListViewModel @Inject constructor(
         filteredNotes
     }
 
-    @OptIn(FlowPreview::class)
     val searchResultWithRetry: StateFlow<UIState> = retryEmitter
         .onStart { emit(Unit) }
         .flatMapLatest {

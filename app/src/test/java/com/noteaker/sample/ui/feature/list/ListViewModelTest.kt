@@ -20,7 +20,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import junit.framework.TestCase.assertEquals
-import junit.framework.TestCase.fail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
@@ -29,7 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withTimeout
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -109,7 +108,7 @@ class ListViewModelTest {
     }
 
     @Test
-    fun testSearchResults() = runTest {
+    fun testSearchResults() = runTest scope@ {
         val notes = listOf(
             Note(1, "Test", "Test Note", System.currentTimeMillis(), emptyList()),
             Note(2, "Test2", "Test Note2", System.currentTimeMillis(), emptyList()),
@@ -126,8 +125,10 @@ class ListViewModelTest {
             ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
         searchViewModel.searchResult.test {
-            assertEquals(UIState.Loading, (awaitItem() as UIState))
+            this@scope.advanceTimeBy(500)
+            assertEquals(3, awaitItem().size)
             searchViewModel.onSearchQuery("Test")
+            this@scope.advanceTimeBy(500)
             val result = awaitItem()
             assertEquals(2, result.size)
             assertEquals("Test", result[0].title)
@@ -136,7 +137,7 @@ class ListViewModelTest {
     }
 
     @Test
-    fun testSearchResultsWithAttachment() = runTest {
+    fun testSearchResultsWithAttachment() = runTest scope@ {
         val notes = listOf(
             Note(1, "Test", "Test Note", System.currentTimeMillis(), emptyList()),
             Note(2, "Test2", "Test Note2", System.currentTimeMillis(), emptyList()),
@@ -162,8 +163,10 @@ class ListViewModelTest {
             ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
         searchViewModel.searchResult.test {
-            assertEquals(0, awaitItem().size)
+            this@scope.advanceTimeBy(500)
+            assertEquals(3, awaitItem().size)
             searchViewModel.onSearchQuery("Test")
+            this@scope.advanceTimeBy(500)
             val result = awaitItem()
             assertEquals(3, result.size)
             assertEquals("Test", result[0].title)
@@ -187,7 +190,7 @@ class ListViewModelTest {
     }
 
     @Test
-    fun testSearchResultsByContent() = runTest {
+    fun testSearchResultsByContent() = runTest scope@ {
         val notes = listOf(
             Note(1, "Alpha", "Hello World", System.currentTimeMillis(), emptyList()),
             Note(2, "Beta", "Another body", System.currentTimeMillis(), emptyList())
@@ -200,8 +203,10 @@ class ListViewModelTest {
             ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
         searchViewModel.searchResult.test {
-            assertEquals(0, awaitItem().size)
+            this@scope.advanceTimeBy(500)
+            assertEquals(2, awaitItem().size)
             searchViewModel.onSearchQuery("world")
+            this@scope.advanceTimeBy(500)
             val result = awaitItem()
             assertEquals(1, result.size)
             assertEquals("Alpha", result[0].title)
@@ -209,7 +214,7 @@ class ListViewModelTest {
     }
 
     @Test
-    fun testSearchIsCaseInsensitive() = runTest {
+    fun testSearchIsCaseInsensitive() = runTest scope@ {
         val notes = listOf(
             Note(1, "Test", "body", System.currentTimeMillis(), emptyList()),
             Note(2, "TeSt2", "body", System.currentTimeMillis(), emptyList())
@@ -222,8 +227,10 @@ class ListViewModelTest {
             ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
         searchViewModel.searchResult.test {
-            assertEquals(0, awaitItem().size)
+            this@scope.advanceTimeBy(500)
+            assertEquals(2, awaitItem().size)
             searchViewModel.onSearchQuery("tEsT")
+            this@scope.advanceTimeBy(500)
             val result = awaitItem()
             assertEquals(2, result.size)
             assertEquals("Test", result[0].title)
@@ -232,7 +239,7 @@ class ListViewModelTest {
     }
 
     @Test
-    fun testWhitespaceQueryReturnsAll() = runTest {
+    fun testWhitespaceQueryReturnsAll() = runTest scope@ {
         val notes = listOf(
             Note(1, "One", "aaa", System.currentTimeMillis(), emptyList()),
             Note(2, "Two", "bbb", System.currentTimeMillis(), emptyList()),
@@ -246,8 +253,10 @@ class ListViewModelTest {
             ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
         searchViewModel.searchResult.test {
-            assertEquals(0, awaitItem().size)
+            this@scope.advanceTimeBy(500)
+            assertEquals(3, awaitItem().size)
             searchViewModel.onSearchQuery("   ")
+            this@scope.advanceTimeBy(500)
             val result = awaitItem()
             assertEquals(3, result.size)
         }
@@ -296,7 +305,7 @@ class ListViewModelTest {
     }
 
     @Test
-    fun testSearchResultsWithoutTurbine() = runTest(testCoroutineRule.testDispatcher) {
+    fun testSearchResultsWithoutTurbine() = runTest scope@ {
         val notes = listOf(
             Note(1, "Test", "Test Note", System.currentTimeMillis(), emptyList()),
             Note(2, "Test2", "Test Note2", System.currentTimeMillis(), emptyList()),
@@ -320,33 +329,16 @@ class ListViewModelTest {
         // noteList is read when ListViewModel initializes combine(...); stub before construction.
         val searchViewModel =
             ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
-        searchViewModel.onSearchQuery("Test")
-
-        var list : List<NoteUI>? = null
+        var list: List<NoteUI>? = null
         val job = launch {
-            searchViewModel.searchResult.collect {
-                if (it.isEmpty()) {
-                    list = it
-                }
-
-            }
+            searchViewModel.searchResult.collect { list = it }
         }
-
-        try {
-            withTimeout(1000) {
-                while(true) {
-                    advanceTimeBy(500)
-                    list?.let {
-                        assertEquals(3, it.size)
-                        job.cancelAndJoin()
-                        break
-                    }
-                }
-            }
-
-        } catch (e: Exception) {
-            fail("Did not assert on time")
-        }
+        this@scope.advanceTimeBy(500)
+        searchViewModel.onSearchQuery("Test")
+        this@scope.advanceTimeBy(500)
+        advanceUntilIdle()
+        assertEquals(3, list?.size)
+        job.cancelAndJoin()
     }
 
     @Test
@@ -360,10 +352,18 @@ class ListViewModelTest {
             repository, navigationManager, intentOrchestrator, quoteRepository
         )
 
-        // With retry + catch, should emit empty list instead of crashing
         errorViewModel.searchResultWithRetry.test {
-            val result = awaitItem()
-            assertEquals(emptyList<NoteUI>(), result)
+            // StateFlow keeps only the latest value; with UnconfinedTestDispatcher, Loading → Error
+            // can happen before the first awaitItem(), so the first emission may already be Error.
+            val first = awaitItem()
+            val err = if (first is UIState.Loading) {
+                advanceUntilIdle()
+                awaitItem()
+            } else {
+                first
+            }
+            assertTrue(err is UIState.Error)
+            assertTrue((err as UIState.Error).message.contains("Database"))
             cancelAndIgnoreRemainingEvents()
         }
     }
