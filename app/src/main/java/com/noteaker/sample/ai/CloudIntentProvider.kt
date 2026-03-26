@@ -21,29 +21,34 @@ class CloudIntentProvider @Inject constructor(
     @IoDispatcher private val dispatcher: CoroutineDispatcher
 ) : NavigationIntentProvider {
 
-    override suspend fun processUserIntent(userMessage: String): Result<String?> = withContext(dispatcher) {
-        runCatching {
-            val model = geminiModelProvider.model
-            val chat = model.startChat()
-            val response = chat.sendMessage(userMessage)
-            val functionCalls = response.functionCalls
-            var result: String? = null
-            functionCalls.forEach { functionCall ->
-                geminiModelProvider.toolList[functionCall.name]?.let { functionDeclaration ->
-                    result = extractRouteFromFunctionCall(functionCall, functionDeclaration)
-                }
+    override suspend fun processUserIntent(userMessage: String): Result<String?> =
+        withContext(dispatcher) {
+            runCatching {
+                val model = geminiModelProvider.model
+                val chat = model.startChat()
+                val response = chat.sendMessage(userMessage)
+                val functionCalls = response.functionCalls
+                var result: String? = null
+                functionCalls.forEach { functionCall ->
+                    geminiModelProvider.toolList[functionCall.name]?.let { functionDeclaration ->
+                        result = extractRouteFromFunctionCall(functionCall, functionDeclaration)
+                    }
 
-                if (geminiModelProvider.toolList[functionCall.name] == null) {
-                    Timber.d("CloudNavigationIntentProvider: no navigate function call in response")
+                    if (geminiModelProvider.toolList[functionCall.name] == null) {
+                        Timber.d("CloudNavigationIntentProvider: no navigate function call in response")
+                    }
                 }
+                if (result == null) throw IllegalStateException("No tool found")
+                result
+            }.onFailure {
+                Timber.e(it, "CloudNavigationIntentProvider: processUserIntent failed")
             }
-            result
-        }.onFailure {
-            Timber.e(it, "CloudNavigationIntentProvider: processUserIntent failed")
         }
-    }
 
-    private fun extractRouteFromFunctionCall(functionCall: Any, functionDeclaration: AiToolDeclaration): String? {
+    private fun extractRouteFromFunctionCall(
+        functionCall: Any,
+        functionDeclaration: AiToolDeclaration
+    ): String? {
         return try {
             val getArgs = functionCall.javaClass.getMethod("getArgs")
             val args = getArgs.invoke(functionCall) as? Map<*, *> ?: return null

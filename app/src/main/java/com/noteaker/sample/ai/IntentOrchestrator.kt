@@ -1,8 +1,6 @@
 package com.noteaker.sample.ai
 
 import com.noteaker.sample.di.IoDispatcher
-import com.noteaker.sample.navigation.NavState
-import com.noteaker.sample.navigation.NavigationCommand
 import com.noteaker.sample.navigation.NavigationManager
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import kotlinx.coroutines.CoroutineDispatcher
@@ -15,9 +13,8 @@ import javax.inject.Inject
  * When the provider returns a route, this orchestrator calls [NavigationManager] to navigate.
  */
 @ActivityRetainedScoped
-class NavigationOrchestrator @Inject constructor(
-    private val navigationManager: NavigationManager,
-    private val intentProvider: NavigationIntentProvider,
+class IntentOrchestrator @Inject constructor(
+    private val navigationIntentProvider: NavigationIntentProvider,
     @IoDispatcher private val dispatcher: CoroutineDispatcher
 ) {
 
@@ -26,12 +23,8 @@ class NavigationOrchestrator @Inject constructor(
      * Caller can use [Result.onFailure] to fall back to direct navigation.
      */
     suspend fun processUserIntent(userMessage: String): Result<Unit> = withContext(dispatcher) {
-        intentProvider.processUserIntent(userMessage)
-            .mapCatching { route ->
-                if (route.isNullOrBlank()) throw Exception("No route returned")
-                navigationManager.navigate(
-                    NavState.NavigateToRoute(NavigationCommand(path = route))
-                )
+        navigationIntentProvider.processUserIntent(userMessage)
+            .mapCatching { _ ->
             }
             .onFailure {
                 Timber.e(it, "NavigationOrchestrator: processUserIntent failed")

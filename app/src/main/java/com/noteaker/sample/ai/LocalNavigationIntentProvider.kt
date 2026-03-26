@@ -4,6 +4,9 @@ import com.google.mlkit.genai.common.DownloadStatus
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.prompt.Generation
 import com.noteaker.sample.di.IoDispatcher
+import com.noteaker.sample.navigation.NavState
+import com.noteaker.sample.navigation.NavigationCommand
+import com.noteaker.sample.navigation.NavigationManager
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
@@ -19,6 +22,7 @@ import javax.inject.Inject
  */
 @ActivityRetainedScoped
 class LocalNavigationIntentProvider @Inject constructor(
+    private val navigationManager: NavigationManager,
     @IoDispatcher private val dispatcher: CoroutineDispatcher
 ) : NavigationIntentProvider {
 
@@ -27,22 +31,33 @@ class LocalNavigationIntentProvider @Inject constructor(
     override suspend fun processUserIntent(userMessage: String): Result<String?> =
         withContext(dispatcher) {
             runCatching {
-                when (val status = model.checkStatus()) {
+                val route = when (model.checkStatus()) {
                     FeatureStatus.AVAILABLE -> runLocalInference(userMessage)
                     FeatureStatus.DOWNLOADABLE -> {
                         Timber.d("LocalNavigationIntentProvider: downloading model...")
                         downloadModelAndRun(userMessage)
                     }
+
                     FeatureStatus.DOWNLOADING -> {
                         Timber.d("LocalNavigationIntentProvider: model already downloading, waiting...")
                         waitForAvailableThenRun(userMessage)
                     }
+
                     FeatureStatus.UNAVAILABLE -> {
                         Timber.w("LocalNavigationIntentProvider: Gemini Nano unavailable on device")
                         null
                     }
+
                     else -> null
                 }
+
+                route?.let {
+                    navigationManager.navigate(
+                        NavState.NavigateToRoute(NavigationCommand(path = route))
+                    )
+                    return@runCatching route
+                }
+                throw IllegalStateException("No navigate function call found in response")
             }.onFailure {
                 Timber.e(it, "LocalNavigationIntentProvider: processUserIntent failed")
             }
@@ -58,12 +73,15 @@ class LocalNavigationIntentProvider @Inject constructor(
             when (status) {
                 is DownloadStatus.DownloadStarted ->
                     Timber.d("LocalNavigationIntentProvider: download started")
+
                 is DownloadStatus.DownloadProgress ->
                     Timber.d("LocalNavigationIntentProvider: download progress ${status.totalBytesDownloaded} bytes")
+
                 is DownloadStatus.DownloadCompleted -> {
                     Timber.d("LocalNavigationIntentProvider: download complete")
                     downloadSucceeded = true
                 }
+
                 is DownloadStatus.DownloadFailed -> {
                     Timber.e(status.e, "LocalNavigationIntentProvider: download failed")
                     downloadError = status.e
@@ -89,7 +107,8 @@ class LocalNavigationIntentProvider @Inject constructor(
                 FeatureStatus.AVAILABLE -> return runLocalInference(userMessage)
                 FeatureStatus.DOWNLOADABLE -> return downloadModelAndRun(userMessage)
                 FeatureStatus.UNAVAILABLE -> return null
-                else -> { /* DOWNLOADING, keep waiting */ }
+                else -> { /* DOWNLOADING, keep waiting */
+                }
             }
             delay(pollIntervalMs)
             waited += pollIntervalMs

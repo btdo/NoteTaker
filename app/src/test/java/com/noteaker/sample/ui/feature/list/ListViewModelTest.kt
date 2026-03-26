@@ -2,7 +2,7 @@ package com.noteaker.sample.ui.feature.list
 
 import app.cash.turbine.test
 import com.noteaker.sample.TestCoroutineRule
-import com.noteaker.sample.ai.NavigationOrchestrator
+import com.noteaker.sample.ai.IntentOrchestrator
 import com.noteaker.sample.data.repository.NoteRepository
 import com.noteaker.sample.data.repository.QuoteRepository
 import com.noteaker.sample.domain.model.Attachment
@@ -20,6 +20,7 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.fail
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.flow
@@ -32,6 +33,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+@ExperimentalCoroutinesApi
 class ListViewModelTest {
 
     @get:Rule
@@ -46,7 +48,7 @@ class ListViewModelTest {
     lateinit var navigationManager: NavigationManager
 
     @MockK(relaxed = true)
-    lateinit var navigationOrchestrator: NavigationOrchestrator
+    lateinit var intentOrchestrator: IntentOrchestrator
 
     @MockK(relaxed = true)
     lateinit var quoteRepository: QuoteRepository
@@ -55,26 +57,26 @@ class ListViewModelTest {
     fun setup() {
         MockKAnnotations.init(this)
         viewModel =
-            ListViewModel(repository, navigationManager, navigationOrchestrator, quoteRepository)
+            ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
     }
 
     @Test
     fun testAddClickSuccess() {
         coEvery {
-            navigationOrchestrator.processUserIntent(any())
+            intentOrchestrator.processUserIntent(any())
         } returns Result.success(Unit)
 
         viewModel.addClick()
 
         coVerify(exactly = 1) {
-            navigationOrchestrator.processUserIntent(any())
+            intentOrchestrator.processUserIntent(any())
         }
     }
 
     @Test
     fun testAddClickFailure() {
         coEvery {
-            navigationOrchestrator.processUserIntent(any())
+            intentOrchestrator.processUserIntent(any())
         } returns Result.failure(Exception("Failed to process intent"))
 
         viewModel.addClick()
@@ -87,7 +89,7 @@ class ListViewModelTest {
     @Test
     fun testOnEditClickSuccess() {
         coEvery {
-            navigationOrchestrator.processUserIntent(any())
+            intentOrchestrator.processUserIntent(any())
         } returns Result.success(Unit)
 
         viewModel.onEditClick(
@@ -101,7 +103,7 @@ class ListViewModelTest {
         )
 
         coVerify(exactly = 1) {
-            navigationOrchestrator.processUserIntent(any())
+            intentOrchestrator.processUserIntent(any())
         }
     }
 
@@ -120,7 +122,7 @@ class ListViewModelTest {
         }
         // noteList is read when ListViewModel initializes combine(...); stub before construction.
         val searchViewModel =
-            ListViewModel(repository, navigationManager, navigationOrchestrator, quoteRepository)
+            ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
         searchViewModel.searchResults.test {
             assertEquals(0, awaitItem().size)
@@ -156,7 +158,7 @@ class ListViewModelTest {
         }
         // noteList is read when ListViewModel initializes combine(...); stub before construction.
         val searchViewModel =
-            ListViewModel(repository, navigationManager, navigationOrchestrator, quoteRepository)
+            ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
         searchViewModel.searchResults.test {
             assertEquals(0, awaitItem().size)
@@ -172,7 +174,7 @@ class ListViewModelTest {
     @Test
     fun testOnEditClickFailure() {
         coEvery {
-            navigationOrchestrator.processUserIntent(any())
+            intentOrchestrator.processUserIntent(any())
         } returns Result.failure(Exception("Failed to process intent"))
 
         val note = NoteUI(42, "Title", "Body", System.currentTimeMillis(), emptyList())
@@ -194,7 +196,7 @@ class ListViewModelTest {
             awaitCancellation()
         }
         val searchViewModel =
-            ListViewModel(repository, navigationManager, navigationOrchestrator, quoteRepository)
+            ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
         searchViewModel.searchResults.test {
             assertEquals(0, awaitItem().size)
@@ -216,7 +218,7 @@ class ListViewModelTest {
             awaitCancellation()
         }
         val searchViewModel =
-            ListViewModel(repository, navigationManager, navigationOrchestrator, quoteRepository)
+            ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
         searchViewModel.searchResults.test {
             assertEquals(0, awaitItem().size)
@@ -240,7 +242,7 @@ class ListViewModelTest {
             awaitCancellation()
         }
         val searchViewModel =
-            ListViewModel(repository, navigationManager, navigationOrchestrator, quoteRepository)
+            ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
         searchViewModel.searchResults.test {
             assertEquals(0, awaitItem().size)
@@ -273,7 +275,7 @@ class ListViewModelTest {
             awaitCancellation()
         }
         val searchViewModel =
-            ListViewModel(repository, navigationManager, navigationOrchestrator, quoteRepository)
+            ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
         coEvery {
             repository.deleteSelectedNotes(deletedSet)
@@ -316,7 +318,7 @@ class ListViewModelTest {
         }
         // noteList is read when ListViewModel initializes combine(...); stub before construction.
         val searchViewModel =
-            ListViewModel(repository, navigationManager, navigationOrchestrator, quoteRepository)
+            ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
         searchViewModel.onSearchQuery("Test")
 
         var list : List<NoteUI>? = null
@@ -354,7 +356,7 @@ class ListViewModelTest {
         }
 
         val errorViewModel = ListViewModel(
-            repository, navigationManager, navigationOrchestrator, quoteRepository
+            repository, navigationManager, intentOrchestrator, quoteRepository
         )
 
         // With retry + catch, should emit empty list instead of crashing

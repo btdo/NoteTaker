@@ -2,7 +2,7 @@ package com.noteaker.sample.ui.feature.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.noteaker.sample.ai.NavigationOrchestrator
+import com.noteaker.sample.ai.IntentOrchestrator
 import com.noteaker.sample.data.model.ZenQuotes
 import com.noteaker.sample.data.repository.NoteRepository
 import com.noteaker.sample.data.repository.QuoteRepository
@@ -10,7 +10,6 @@ import com.noteaker.sample.navigation.NavState
 import com.noteaker.sample.navigation.NavigationCommand
 import com.noteaker.sample.navigation.NavigationManager
 import com.noteaker.sample.ui.model.NoteUI
-import com.noteaker.sample.ui.model.UIState
 import com.noteaker.sample.ui.navigation.AddRoute
 import com.noteaker.sample.ui.navigation.EditRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,7 +35,7 @@ import javax.inject.Inject
 class ListViewModel @Inject constructor(
     private val repository: NoteRepository,
     private val navigationManager: NavigationManager,
-    private val navigationOrchestrator: NavigationOrchestrator,
+    private val intentOrchestrator: IntentOrchestrator,
     private val quoteRepository: QuoteRepository
 ) : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
@@ -97,7 +96,7 @@ class ListViewModel @Inject constructor(
 
     fun addClick() {
         viewModelScope.launch {
-            navigationOrchestrator.processUserIntent(
+            intentOrchestrator.processUserIntent(
                 "User tapped the Add button to add a new note."
             ).onFailure {
                 // Fallback: navigate directly if AI call fails (e.g. no network)
@@ -109,7 +108,7 @@ class ListViewModel @Inject constructor(
 
     fun onEditClick(note: NoteUI) {
         viewModelScope.launch {
-            navigationOrchestrator.processUserIntent(
+            intentOrchestrator.processUserIntent(
                 "User tapped on note with id ${note.id} to edit it."
             ).onFailure {
                 Timber.e(it, "Failed to process edit note intent, use fallback navigation")

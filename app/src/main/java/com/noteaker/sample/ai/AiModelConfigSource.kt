@@ -20,7 +20,7 @@ interface AiModelConfigSource {
  */
 class DefaultAiModelConfigSource @Inject constructor() : AiModelConfigSource {
 
-    override fun current(): AiModelType = AiModelType.CLOUD_GENERIC
+    override fun current(): AiModelType = AiModelType.CLOUD_NAVIGATION
 }
 
 /**
@@ -30,7 +30,7 @@ class DefaultAiModelConfigSource @Inject constructor() : AiModelConfigSource {
 enum class AiModelType {
     CLOUD_GENERIC,
     /** Cloud: Firebase AI (Gemini). Requires network. */
-    CLOUD,
+    CLOUD_NAVIGATION,
 
     /** Local: ML Kit GenAI Prompt API (Gemini Nano on-device). No network. */
     LOCAL
