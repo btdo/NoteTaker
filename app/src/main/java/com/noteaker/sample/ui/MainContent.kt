@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,24 +43,37 @@ fun MainContent(
     val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(lifecycleOwner) {
-        Timber.d("MainContent: Starting lifecycle-aware snackbar collection")
         navigationManager.snackBar
             .flowWithLifecycle(lifecycleOwner.lifecycle, Lifecycle.State.STARTED)
             .collect { message ->
-                snackbarHostState.showSnackbar(message)
+                if (message.snackBarAction != null) {
+                    val result = snackbarHostState.showSnackbar(
+                        message.message,
+                        actionLabel = message.snackBarAction.label,
+                        duration = SnackbarDuration.Long
+                    )
+                    when (result) {
+                        SnackbarResult.ActionPerformed -> message.snackBarAction.action()
+                        else -> {}
+                    }
+                } else {
+                    snackbarHostState.showSnackbar(message.message)
+                }
             }
     }
 
     Scaffold(modifier = Modifier.fillMaxSize(), snackbarHost = {
         SnackbarHost(hostState = snackbarHostState)
-    } , topBar = {
+    }, topBar = {
         RouteAwareTopBar(
             navController = navController,
             onBackClicked = navigationManager::popBackStack,
             onItemClicked = viewModel::onTopBarItemClick
         )
     }) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
             MainNavigation(navigationManager, navController)
             NavHost(
                 navController = navController,

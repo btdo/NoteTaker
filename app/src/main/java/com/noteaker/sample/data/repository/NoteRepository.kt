@@ -8,6 +8,7 @@ import com.noteaker.sample.data.model.NoteEntity
 import com.noteaker.sample.di.IoDispatcher
 import com.noteaker.sample.domain.model.Attachment
 import com.noteaker.sample.domain.model.Note
+import com.noteaker.sample.domain.model.NoteStatus
 import com.noteaker.sample.domain.model.toEntity
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
@@ -26,6 +27,8 @@ interface NoteRepository {
     suspend fun delete(note: Long): Result<Unit>
     suspend fun get(id: Int): Note
     suspend fun deleteSelectedNotes(noteIds: Set<Long>): Result<Unit>
+
+    suspend fun updateNoteStatus(noteIds: Set<Long>, status: NoteStatus): Result<Unit>
 }
 
 class MyNoteRepository @Inject constructor(
@@ -35,7 +38,7 @@ class MyNoteRepository @Inject constructor(
     @IoDispatcher private val dispatcher: CoroutineDispatcher
 ) : NoteRepository {
 
-    override val noteList: Flow<List<Note>> = noteDao.getAllFlow()
+    override val noteList: Flow<List<Note>> = noteDao.getByStatusFlow(NoteStatus.ACTIVE.name)
         .map { entities -> loadNotesWithAttachments(entities) }
         .flowOn(dispatcher)
 
@@ -55,7 +58,7 @@ class MyNoteRepository @Inject constructor(
     }
 
     suspend fun addImpl(note: Note): Note = withContext(dispatcher) {
-        var newNote: Note? = null
+        var newNote: Note?
         var attachments: MutableList<Attachment>? = null
         val noteId = noteDao.insert(note.toEntity())
         note.attachments.forEach {
@@ -95,8 +98,21 @@ class MyNoteRepository @Inject constructor(
             runCatching {
                 database.withTransaction {
                     noteIds.forEach { noteId ->
-                        noteDao.deleteByNoteId(noteId)
-                        attachmentDao.deleteByNoteId(noteId)
+                        delete(noteId)
+                    }
+                }
+            }
+        }
+
+    override suspend fun updateNoteStatus(noteIds: Set<Long>, status: NoteStatus): Result<Unit> =
+        withContext(dispatcher) {
+            runCatching {
+                database.withTransaction {
+                    noteIds.forEach { noteId ->
+                        val note = noteDao.getById(noteId)
+                        note?.let {
+                            noteDao.update(note.copy(status = status.toString()))
+                        }
                     }
                 }
             }

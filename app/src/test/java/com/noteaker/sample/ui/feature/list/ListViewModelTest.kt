@@ -7,9 +7,11 @@ import com.noteaker.sample.data.repository.NoteRepository
 import com.noteaker.sample.data.repository.QuoteRepository
 import com.noteaker.sample.domain.model.Attachment
 import com.noteaker.sample.domain.model.Note
+import com.noteaker.sample.domain.model.NoteStatus
 import com.noteaker.sample.navigation.NavState
 import com.noteaker.sample.navigation.NavigationCommand
 import com.noteaker.sample.navigation.NavigationManager
+import com.noteaker.sample.navigation.SnackBar
 import com.noteaker.sample.ui.model.NoteUI
 import com.noteaker.sample.ui.model.UIState
 import com.noteaker.sample.ui.navigation.AddRoute
@@ -19,6 +21,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import io.mockk.slot
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
@@ -110,9 +113,9 @@ class ListViewModelTest {
     @Test
     fun testSearchResults() = runTest scope@ {
         val notes = listOf(
-            Note(1, "Test", "Test Note", System.currentTimeMillis(), emptyList()),
-            Note(2, "Test2", "Test Note2", System.currentTimeMillis(), emptyList()),
-            Note(3, "Not", "abcd", System.currentTimeMillis(), emptyList())
+            Note(1, "Test", "Test Note", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
+            Note(2, "Test2", "Test Note2", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
+            Note(3, "Not", "abcd", lastUpdated = System.currentTimeMillis(), attachments = emptyList())
         )
         // combine() cancels when any upstream completes; flowOf emits once then completes,
         // so debounce never gets to emit with the notes still available.
@@ -139,10 +142,10 @@ class ListViewModelTest {
     @Test
     fun testSearchResultsWithAttachment() = runTest scope@ {
         val notes = listOf(
-            Note(1, "Test", "Test Note", System.currentTimeMillis(), emptyList()),
-            Note(2, "Test2", "Test Note2", System.currentTimeMillis(), emptyList()),
+            Note(1, "Test", "Test Note", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
+            Note(2, "Test2", "Test Note2", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
             Note(
-                3, "Not", "abcd", System.currentTimeMillis(), listOf(
+                3, "Not", "abcd", lastUpdated = System.currentTimeMillis(), attachments = listOf(
                     Attachment(
                         1,
                         "uri",
@@ -192,8 +195,8 @@ class ListViewModelTest {
     @Test
     fun testSearchResultsByContent() = runTest scope@ {
         val notes = listOf(
-            Note(1, "Alpha", "Hello World", System.currentTimeMillis(), emptyList()),
-            Note(2, "Beta", "Another body", System.currentTimeMillis(), emptyList())
+            Note(1, "Alpha", "Hello World", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
+            Note(2, "Beta", "Another body", lastUpdated = System.currentTimeMillis(), attachments = emptyList())
         )
         every { repository.noteList } returns flow {
             emit(notes)
@@ -216,8 +219,8 @@ class ListViewModelTest {
     @Test
     fun testSearchIsCaseInsensitive() = runTest scope@ {
         val notes = listOf(
-            Note(1, "Test", "body", System.currentTimeMillis(), emptyList()),
-            Note(2, "TeSt2", "body", System.currentTimeMillis(), emptyList())
+            Note(1, "Test", "body", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
+            Note(2, "TeSt2", "body", lastUpdated = System.currentTimeMillis(), attachments = emptyList())
         )
         every { repository.noteList } returns flow {
             emit(notes)
@@ -241,9 +244,9 @@ class ListViewModelTest {
     @Test
     fun testWhitespaceQueryReturnsAll() = runTest scope@ {
         val notes = listOf(
-            Note(1, "One", "aaa", System.currentTimeMillis(), emptyList()),
-            Note(2, "Two", "bbb", System.currentTimeMillis(), emptyList()),
-            Note(3, "Three", "ccc", System.currentTimeMillis(), emptyList())
+            Note(1, "One", "aaa", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
+            Note(2, "Two", "bbb", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
+            Note(3, "Three", "ccc", lastUpdated = System.currentTimeMillis(), attachments = emptyList())
         )
         every { repository.noteList } returns flow {
             emit(notes)
@@ -277,8 +280,8 @@ class ListViewModelTest {
     fun testDeleteSelectedNotes() = runTest {
         val deletedSet = setOf<Long>(1, 2)
         val notes = listOf(
-            Note(1, "Test", "body", System.currentTimeMillis(), emptyList()),
-            Note(2, "TeSt2", "body", System.currentTimeMillis(), emptyList())
+            Note(1, "Test", "body", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
+            Note(2, "TeSt2", "body", lastUpdated = System.currentTimeMillis(), attachments = emptyList())
         )
         every { repository.noteList } returns flow {
             emit(notes)
@@ -288,7 +291,7 @@ class ListViewModelTest {
             ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
         coEvery {
-            repository.deleteSelectedNotes(deletedSet)
+            repository.updateNoteStatus(deletedSet, NoteStatus.ARCHIVED)
         } returns Result.success(Unit)
 
         searchViewModel.onSelectionChange(1, true)
@@ -296,21 +299,25 @@ class ListViewModelTest {
         searchViewModel.onDeleteClick()
         advanceUntilIdle()
         coVerify(exactly = 1) {
-            repository.deleteSelectedNotes(deletedSet)
+            repository.updateNoteStatus(deletedSet, NoteStatus.ARCHIVED)
         }
+
+        val snackBarSlot = slot<SnackBar>()
         coVerify {
-            navigationManager.showSnackBar("Notes deleted")
+            navigationManager.showSnackBar(capture(snackBarSlot))
         }
+        assertEquals("Notes deleted", snackBarSlot.captured.message)
+        assertEquals("Undo", snackBarSlot.captured.snackBarAction?.label)
         assertEquals(emptySet<Long>(), searchViewModel.selectedNoteIds.value)
     }
 
     @Test
     fun testSearchResultsWithoutTurbine() = runTest scope@ {
         val notes = listOf(
-            Note(1, "Test", "Test Note", System.currentTimeMillis(), emptyList()),
-            Note(2, "Test2", "Test Note2", System.currentTimeMillis(), emptyList()),
+            Note(1, "Test", "Test Note", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
+            Note(2, "Test2", "Test Note2", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
             Note(
-                3, "Not", "abcd", System.currentTimeMillis(), listOf(
+                3, "Not", "abcd", lastUpdated = System.currentTimeMillis(), attachments = listOf(
                     Attachment(
                         1,
                         "uri",

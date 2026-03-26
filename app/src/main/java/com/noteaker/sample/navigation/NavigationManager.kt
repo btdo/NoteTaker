@@ -13,6 +13,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import kotlin.collections.get
 
+data class SnackBarAction(val label: String, val action: suspend () -> Unit)
+data class SnackBar (val message: String, val snackBarAction: SnackBarAction? = null  )
+
+
 @ActivityRetainedScoped
 class NavigationManager @Inject constructor() : AiToolDeclaration {
     companion object {
@@ -22,8 +26,8 @@ class NavigationManager @Inject constructor() : AiToolDeclaration {
     private val _navigationState = MutableStateFlow<NavState>(NavState.Idle)
     val navigationState: StateFlow<NavState> = _navigationState.asStateFlow()
 
-    private val _snackBar = MutableSharedFlow<String>()
-    val snackBar: SharedFlow<String> = _snackBar.asSharedFlow()
+    private val _snackBar = MutableSharedFlow<SnackBar>()
+    val snackBar: SharedFlow<SnackBar> = _snackBar.asSharedFlow()
 
     override val tool: FunctionDeclaration = FunctionDeclaration(
         name = TOOL_NAVIGATE,
@@ -60,7 +64,11 @@ Rules: Add / new note -> "AddRoute". List / home -> "ListRoute". Edit note with 
     }
 
     suspend fun showSnackBar(message: String) {
-        _snackBar.emit(message)
+        _snackBar.emit(SnackBar(message))
+    }
+
+    suspend fun showSnackBar(snackBar: SnackBar) {
+        _snackBar.emit(snackBar)
     }
 
     fun onNavigated(state: NavState) {

@@ -94,7 +94,7 @@ fun NoteDetailsScreen(
             ) {
                 AttachmentButtons(onFileClick, onCameraClick)
                 // Cancel/Delete/Save Buttons
-                ActionButtons(onCancelClick , onSaveClick, note, title, content)
+                ActionButtons(onCancelClick, onSaveClick, note, title, content)
             }
         }
     }
@@ -161,7 +161,14 @@ private fun ActionButtons(
         // Save Button
         FilledIconButton(
             onClick = {
-                onSaveClick(Note(id = note?.id ?: 0, title = title, note = content, attachments = note?.attachments ?: emptyList()))
+                onSaveClick(
+                    Note(
+                        id = note?.id ?: 0,
+                        title = title,
+                        note = content,
+                        attachments = note?.attachments ?: emptyList()
+                    )
+                )
             },
             enabled = title.isNotBlank() && content.isNotBlank(),
             colors = IconButtonDefaults.filledIconButtonColors(
@@ -298,7 +305,7 @@ fun NoteDetailsScreenPreviewLight() {
             onFileClick = {},
             onCameraClick = {},
             onCancelClick = {}, header = {
-                DetailsHeader("Add Note"){}
+                DetailsHeader("Add Note") {}
             })
     }
 }
@@ -311,7 +318,7 @@ fun NoteDetailsScreenPreviewDark() {
             onSaveClick = {},
             onFileClick = {},
             onCameraClick = {},
-            onCancelClick = {} , header = {
+            onCancelClick = {}, header = {
                 DetailsHeader("Add Note") {}
             })
     }

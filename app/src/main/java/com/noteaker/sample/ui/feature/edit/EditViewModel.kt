@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.noteaker.sample.data.repository.NoteRepository
 import com.noteaker.sample.domain.model.Note
+import com.noteaker.sample.domain.model.NoteStatus
 import com.noteaker.sample.navigation.NavigationManager
+import com.noteaker.sample.navigation.SnackBar
+import com.noteaker.sample.navigation.SnackBarAction
 import com.noteaker.sample.ui.model.UIState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,8 +43,11 @@ class EditViewModel @Inject constructor(
 
     fun onDelete(note: Note) {
         viewModelScope.launch {
-            repository.delete(note.id).onSuccess {
-                navigationManager.showSnackBar("Note Deleted")
+            val deletedSet = mutableSetOf(note.id)
+            repository.updateNoteStatus(deletedSet, NoteStatus.ARCHIVED).onSuccess {
+                navigationManager.showSnackBar(SnackBar("Note deleted", SnackBarAction("Undo", {
+                    repository.updateNoteStatus(deletedSet, NoteStatus.ACTIVE)
+                })))
                 navigationManager.popBackStack()
             }.onFailure {
                 navigationManager.showSnackBar("Failed to delete note")

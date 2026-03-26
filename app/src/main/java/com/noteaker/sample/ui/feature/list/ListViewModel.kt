@@ -6,9 +6,12 @@ import com.noteaker.sample.ai.IntentOrchestrator
 import com.noteaker.sample.data.model.ZenQuotes
 import com.noteaker.sample.data.repository.NoteRepository
 import com.noteaker.sample.data.repository.QuoteRepository
+import com.noteaker.sample.domain.model.NoteStatus
 import com.noteaker.sample.navigation.NavState
 import com.noteaker.sample.navigation.NavigationCommand
 import com.noteaker.sample.navigation.NavigationManager
+import com.noteaker.sample.navigation.SnackBar
+import com.noteaker.sample.navigation.SnackBarAction
 import com.noteaker.sample.ui.model.NoteUI
 import com.noteaker.sample.ui.model.UIState
 import com.noteaker.sample.ui.navigation.AddRoute
@@ -126,8 +129,11 @@ class ListViewModel @Inject constructor(
 
     fun onDeleteClick() {
         viewModelScope.launch {
-            repository.deleteSelectedNotes(_selectedNoteIds.value).onSuccess {
-                navigationManager.showSnackBar("Note${if (_selectedNoteIds.value.size > 1) "s" else ""} deleted")
+            val selectedNoteIds = _selectedNoteIds.value
+            repository.updateNoteStatus(selectedNoteIds, NoteStatus.ARCHIVED).onSuccess {
+                navigationManager.showSnackBar(SnackBar("Notes deleted", SnackBarAction("Undo", {
+                    repository.updateNoteStatus(selectedNoteIds, NoteStatus.ACTIVE)
+                })))
                 _selectedNoteIds.value = setOf()
             }.onFailure {
                 navigationManager.showSnackBar("Failed to delete notes.  Try again later")
