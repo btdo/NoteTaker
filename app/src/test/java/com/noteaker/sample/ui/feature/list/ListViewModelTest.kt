@@ -101,7 +101,7 @@ class ListViewModelTest {
                 "Test",
                 "Test Note",
                 System.currentTimeMillis(),
-                emptyList()
+                attachments = emptyList()
             )
         )
 
@@ -111,11 +111,29 @@ class ListViewModelTest {
     }
 
     @Test
-    fun testSearchResults() = runTest scope@ {
+    fun testSearchResults() = runTest scope@{
         val notes = listOf(
-            Note(1, "Test", "Test Note", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
-            Note(2, "Test2", "Test Note2", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
-            Note(3, "Not", "abcd", lastUpdated = System.currentTimeMillis(), attachments = emptyList())
+            Note(
+                1,
+                "Test",
+                "Test Note",
+                lastUpdated = System.currentTimeMillis(),
+                attachments = emptyList()
+            ),
+            Note(
+                2,
+                "Test2",
+                "Test Note2",
+                lastUpdated = System.currentTimeMillis(),
+                attachments = emptyList()
+            ),
+            Note(
+                3,
+                "Not",
+                "abcd",
+                lastUpdated = System.currentTimeMillis(),
+                attachments = emptyList()
+            )
         )
         // combine() cancels when any upstream completes; flowOf emits once then completes,
         // so debounce never gets to emit with the notes still available.
@@ -140,10 +158,22 @@ class ListViewModelTest {
     }
 
     @Test
-    fun testSearchResultsWithAttachment() = runTest scope@ {
+    fun testSearchResultsWithAttachment() = runTest scope@{
         val notes = listOf(
-            Note(1, "Test", "Test Note", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
-            Note(2, "Test2", "Test Note2", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
+            Note(
+                1,
+                "Test",
+                "Test Note",
+                lastUpdated = System.currentTimeMillis(),
+                attachments = emptyList()
+            ),
+            Note(
+                2,
+                "Test2",
+                "Test Note2",
+                lastUpdated = System.currentTimeMillis(),
+                attachments = emptyList()
+            ),
             Note(
                 3, "Not", "abcd", lastUpdated = System.currentTimeMillis(), attachments = listOf(
                     Attachment(
@@ -184,7 +214,8 @@ class ListViewModelTest {
             intentOrchestrator.processUserIntent(any())
         } returns Result.failure(Exception("Failed to process intent"))
 
-        val note = NoteUI(42, "Title", "Body", System.currentTimeMillis(), emptyList())
+        val note =
+            NoteUI(42, "Title", "Body", System.currentTimeMillis(), attachments = emptyList())
         viewModel.onEditClick(note)
 
         coVerify(exactly = 1) {
@@ -193,10 +224,22 @@ class ListViewModelTest {
     }
 
     @Test
-    fun testSearchResultsByContent() = runTest scope@ {
+    fun testSearchResultsByContent() = runTest scope@{
         val notes = listOf(
-            Note(1, "Alpha", "Hello World", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
-            Note(2, "Beta", "Another body", lastUpdated = System.currentTimeMillis(), attachments = emptyList())
+            Note(
+                1,
+                "Alpha",
+                "Hello World",
+                lastUpdated = System.currentTimeMillis(),
+                attachments = emptyList()
+            ),
+            Note(
+                2,
+                "Beta",
+                "Another body",
+                lastUpdated = System.currentTimeMillis(),
+                attachments = emptyList()
+            )
         )
         every { repository.noteList } returns flow {
             emit(notes)
@@ -217,10 +260,22 @@ class ListViewModelTest {
     }
 
     @Test
-    fun testSearchIsCaseInsensitive() = runTest scope@ {
+    fun testSearchIsCaseInsensitive() = runTest scope@{
         val notes = listOf(
-            Note(1, "Test", "body", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
-            Note(2, "TeSt2", "body", lastUpdated = System.currentTimeMillis(), attachments = emptyList())
+            Note(
+                1,
+                "Test",
+                "body",
+                lastUpdated = System.currentTimeMillis(),
+                attachments = emptyList()
+            ),
+            Note(
+                2,
+                "TeSt2",
+                "body",
+                lastUpdated = System.currentTimeMillis(),
+                attachments = emptyList()
+            )
         )
         every { repository.noteList } returns flow {
             emit(notes)
@@ -242,11 +297,29 @@ class ListViewModelTest {
     }
 
     @Test
-    fun testWhitespaceQueryReturnsAll() = runTest scope@ {
+    fun testWhitespaceQueryReturnsAll() = runTest scope@{
         val notes = listOf(
-            Note(1, "One", "aaa", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
-            Note(2, "Two", "bbb", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
-            Note(3, "Three", "ccc", lastUpdated = System.currentTimeMillis(), attachments = emptyList())
+            Note(
+                1,
+                "One",
+                "aaa",
+                lastUpdated = System.currentTimeMillis(),
+                attachments = emptyList()
+            ),
+            Note(
+                2,
+                "Two",
+                "bbb",
+                lastUpdated = System.currentTimeMillis(),
+                attachments = emptyList()
+            ),
+            Note(
+                3,
+                "Three",
+                "ccc",
+                lastUpdated = System.currentTimeMillis(),
+                attachments = emptyList()
+            )
         )
         every { repository.noteList } returns flow {
             emit(notes)
@@ -280,8 +353,20 @@ class ListViewModelTest {
     fun testDeleteSelectedNotes() = runTest {
         val deletedSet = setOf<Long>(1, 2)
         val notes = listOf(
-            Note(1, "Test", "body", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
-            Note(2, "TeSt2", "body", lastUpdated = System.currentTimeMillis(), attachments = emptyList())
+            Note(
+                1,
+                "Test",
+                "body",
+                lastUpdated = System.currentTimeMillis(),
+                attachments = emptyList()
+            ),
+            Note(
+                2,
+                "TeSt2",
+                "body",
+                lastUpdated = System.currentTimeMillis(),
+                attachments = emptyList()
+            )
         )
         every { repository.noteList } returns flow {
             emit(notes)
@@ -312,10 +397,22 @@ class ListViewModelTest {
     }
 
     @Test
-    fun testSearchResultsWithoutTurbine() = runTest scope@ {
+    fun testSearchResultsWithoutTurbine() = runTest scope@{
         val notes = listOf(
-            Note(1, "Test", "Test Note", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
-            Note(2, "Test2", "Test Note2", lastUpdated = System.currentTimeMillis(), attachments = emptyList()),
+            Note(
+                1,
+                "Test",
+                "Test Note",
+                lastUpdated = System.currentTimeMillis(),
+                attachments = emptyList()
+            ),
+            Note(
+                2,
+                "Test2",
+                "Test Note2",
+                lastUpdated = System.currentTimeMillis(),
+                attachments = emptyList()
+            ),
             Note(
                 3, "Not", "abcd", lastUpdated = System.currentTimeMillis(), attachments = listOf(
                     Attachment(
