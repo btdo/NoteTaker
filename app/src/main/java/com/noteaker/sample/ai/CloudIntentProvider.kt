@@ -81,7 +81,7 @@ class GeminiModelProvider @Inject constructor(val toolList: Map<String, @JvmSupp
     companion object {
         /** High-level role; route specifics live in the navigate tool description. */
         private val LLM_ORCHESTRATOR_SYSTEM_INSTRUCTION = """
-You are a navigation assistant for a note-taking app. When the user expresses an intent, you will use a list of tools provided to address the user's intent. Respond only with the function call; do not reply with plain text for navigation.
+You are an assistant for a note-taking app. When the user expresses an intent, you will use a list of tools provided to address the user's intent. Respond only with the function call; do not reply with plain text for navigation.
 """.trimIndent()
     }
 }

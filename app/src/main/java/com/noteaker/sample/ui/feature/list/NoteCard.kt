@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -19,10 +20,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.noteaker.sample.ui.model.AttachmentUI
 import com.noteaker.sample.ui.model.NoteUI
 import com.noteaker.sample.ui.theme.NoteTakerTheme
@@ -78,13 +82,35 @@ fun NoteCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = note.note,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = note.note,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+
+                // Display image here
+                note.imageUri?.let { imageUrl ->
+                    Spacer(modifier = Modifier.width(8.dp))
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = "Note image",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+
+
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -128,6 +154,7 @@ fun NoteCardPreview() {
                 title = "Meeting Notes",
                 note = "Discussed project timeline and deliverables. Need to follow up with the team about the new requirements.",
                 lastUpdated = System.currentTimeMillis() - 3600000,
+                imageUri = "https://picsum.photos/id/237/400/300",
                 attachments = emptyList()
             ),
             isSelected = false,
@@ -147,6 +174,7 @@ fun NoteCardWithAttachmentsPreview() {
                 title = "Project Documentation",
                 note = "Important files and resources for the upcoming presentation. Review all materials before the meeting.",
                 lastUpdated = System.currentTimeMillis() - 7200000,
+                imageUri = "https://picsum.photos/id/180/400/300",
                 attachments = listOf(
                     AttachmentUI(uri = "file://document.pdf", displayName = "document.pdf"),
                     AttachmentUI(uri = "file://image.png", displayName = "image.png")
@@ -190,7 +218,8 @@ fun NoteCardLongTitlePreview() {
                 lastUpdated = System.currentTimeMillis() - 172800000,
                 attachments = listOf(
                     AttachmentUI(uri = "file://test.pdf", displayName = "test.pdf")
-                )
+                ),
+                imageUri = "https://picsum.photos/200/300"
             ),
             isSelected = false,
             onClick = {},

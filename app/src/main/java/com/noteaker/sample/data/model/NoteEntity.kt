@@ -13,7 +13,8 @@ data class NoteEntity(
     val title: String,
     val status: String,
     val note: String,
-    val lastUpdated: Long
+    val lastUpdated: Long,
+    val imageUri: String? = null
 ) {
     fun toNote(attachments: List<Attachment>): Note = Note(
         id = id,
@@ -21,6 +22,7 @@ data class NoteEntity(
         note = note,
         status = NoteStatus.valueOf(status),
         lastUpdated = lastUpdated,
+        imageUri = imageUri,
         attachments = attachments
     )
 }

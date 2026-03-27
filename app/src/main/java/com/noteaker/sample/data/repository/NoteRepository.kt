@@ -5,6 +5,7 @@ import com.noteaker.sample.data.dao.AttachmentDao
 import com.noteaker.sample.data.dao.NoteDao
 import com.noteaker.sample.data.database.AppDatabase
 import com.noteaker.sample.data.model.NoteEntity
+import com.noteaker.sample.data.network.ImageApi
 import com.noteaker.sample.di.IoDispatcher
 import com.noteaker.sample.domain.model.Attachment
 import com.noteaker.sample.domain.model.Note
@@ -35,6 +36,7 @@ class MyNoteRepository @Inject constructor(
     private val database: AppDatabase,
     private val noteDao: NoteDao,
     private val attachmentDao: AttachmentDao,
+    private val imageApi: ImageApi,
     @IoDispatcher private val dispatcher: CoroutineDispatcher
 ) : NoteRepository {
 
@@ -58,15 +60,25 @@ class MyNoteRepository @Inject constructor(
     }
 
     suspend fun addImpl(note: Note): Note = withContext(dispatcher) {
+        // Fetch a random image from the API
+        val imageUrl = try {
+            val randomPage = (1..10).random()
+            val images = imageApi.images(page = randomPage, limit = 1)
+            images.firstOrNull()?.download_url
+        } catch (e: Exception) {
+            null
+        }
+
         var newNote: Note?
         var attachments: MutableList<Attachment>? = null
-        val noteId = noteDao.insert(note.toEntity())
+        val noteWithImage = note.copy(imageUri = imageUrl)
+        val noteId = noteDao.insert(noteWithImage.toEntity())
         note.attachments.forEach {
             if (attachments == null) attachments = mutableListOf()
             val attachmentId = attachmentDao.insert(it.toEntity(noteId))
             attachments.add(it.copy(id = attachmentId))
         }
-        newNote = note.copy(id = noteId, attachments = attachments ?: emptyList())
+        newNote = noteWithImage.copy(id = noteId, attachments = attachments ?: emptyList())
         return@withContext newNote
     }
 

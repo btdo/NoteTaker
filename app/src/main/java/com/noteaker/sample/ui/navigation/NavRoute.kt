@@ -38,6 +38,7 @@ import com.noteaker.sample.ui.model.UIState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import timber.log.Timber
 
 
 val AppRoutes = listOf(ListRoute, AddRoute, EditRoute)
@@ -98,6 +99,10 @@ object ListRoute : NavRoute<ListViewModel> {
         backStackEntry: NavBackStackEntry,
         viewModel: ListViewModel
     ) {
+        LaunchedEffect(Unit) {
+            Timber.d("ListRoute: LaunchedEffect")
+        }
+
         ListSearchScreen(viewModel)
     }
 }
@@ -114,6 +119,10 @@ object AddRoute : NavRoute<AddViewModel> {
         backStackEntry: NavBackStackEntry,
         viewModel: AddViewModel
     ) {
+        LaunchedEffect(Unit) {
+            Timber.d("AddRoute: LaunchedEffect")
+        }
+
         val uiState by viewModel.uiState.collectAsStateLifeCycle()
         Box(modifier = Modifier.fillMaxSize()) {
             NoteDetailsScreen(

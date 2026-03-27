@@ -4,6 +4,7 @@ import com.noteaker.sample.TestCoroutineRule
 import com.noteaker.sample.data.dao.AttachmentDao
 import com.noteaker.sample.data.dao.NoteDao
 import com.noteaker.sample.data.database.AppDatabase
+import com.noteaker.sample.data.network.ImageApi
 import com.noteaker.sample.domain.model.Attachment
 import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.domain.model.toEntity
@@ -33,13 +34,16 @@ class NoteRepositoryTest {
     @MockK(relaxed = true)
     lateinit var attachmentDao: AttachmentDao
 
+    @MockK(relaxed = true)
+    lateinit var imageApi: ImageApi
+
     lateinit var noteRepository: MyNoteRepository
 
     @Before
     fun setup() {
         MockKAnnotations.init(this)
         noteRepository =
-            MyNoteRepository(database, noteDao, attachmentDao, testCoroutineRule.testDispatcher)
+            MyNoteRepository(database, noteDao, attachmentDao, imageApi, testCoroutineRule.testDispatcher)
     }
 
     @Test

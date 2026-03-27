@@ -10,6 +10,7 @@ data class Note(
     val note: String,
     val status: NoteStatus = NoteStatus.ACTIVE,
     val lastUpdated: Long = System.currentTimeMillis(),
+    val imageUri: String? = null,
     val attachments: List<Attachment> = emptyList()
 )
 
@@ -23,6 +24,7 @@ fun Note.toEntity(): NoteEntity = NoteEntity(
     title = title,
     note = note,
     status = status.name,
-    lastUpdated = lastUpdated
+    lastUpdated = lastUpdated,
+    imageUri = imageUri
 )
 

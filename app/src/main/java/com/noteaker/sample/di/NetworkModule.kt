@@ -1,6 +1,7 @@
 package com.noteaker.sample.di
 
 import com.noteaker.sample.BuildConfig
+import com.noteaker.sample.data.network.ImageApi
 import com.noteaker.sample.data.network.ZenQuotesApi
 import dagger.Module
 import dagger.Provides
@@ -16,7 +17,9 @@ import java.util.concurrent.TimeUnit
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val DEFAULT_BASE_URL = "https://zenquotes.io"
+    private const val ZENQUOTES_BASE_URL = "https://zenquotes.io"
+
+    private const val LOREM_BASE_URL = "https://picsum.photos"
 
     @Provides
     fun provideOkHttpClient(): OkHttpClient {
@@ -34,14 +37,20 @@ object NetworkModule {
     }
 
     @Provides
-    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit =
-        Retrofit.Builder()
-            .baseUrl(DEFAULT_BASE_URL)
+    fun provideZenQuotesApi(okHttpClient: OkHttpClient): ZenQuotesApi {
+        return Retrofit.Builder()
+            .baseUrl(ZENQUOTES_BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
-            .build()
+            .build().create(ZenQuotesApi::class.java)
+    }
 
     @Provides
-    fun provideZenQuotesApi(retrofit: Retrofit): ZenQuotesApi =
-        retrofit.create(ZenQuotesApi::class.java)
+    fun provideImageApi(okHttpClient: OkHttpClient): ImageApi {
+        return Retrofit.Builder()
+            .baseUrl(LOREM_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build().create(ImageApi::class.java)
+    }
 }
