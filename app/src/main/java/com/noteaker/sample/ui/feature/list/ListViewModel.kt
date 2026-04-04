@@ -7,6 +7,7 @@ import com.noteaker.sample.data.model.ZenQuotes
 import com.noteaker.sample.data.repository.NoteRepository
 import com.noteaker.sample.data.repository.QuoteRepository
 import com.noteaker.sample.domain.model.NoteStatus
+import com.noteaker.sample.domain.model.SyncStatus
 import com.noteaker.sample.navigation.NavState
 import com.noteaker.sample.navigation.NavigationCommand
 import com.noteaker.sample.navigation.NavigationManager
@@ -130,9 +131,9 @@ class ListViewModel @Inject constructor(
     fun onDeleteClick() {
         viewModelScope.launch {
             val selectedNoteIds = _selectedNoteIds.value
-            repository.updateNoteStatus(selectedNoteIds, NoteStatus.ARCHIVED).onSuccess {
+            repository.updateNoteStatus(selectedNoteIds, NoteStatus.ARCHIVED, SyncStatus.PENDING).onSuccess {
                 navigationManager.showSnackBar(SnackBar("Notes deleted", SnackBarAction("Undo", {
-                    repository.updateNoteStatus(selectedNoteIds, NoteStatus.ACTIVE)
+                    repository.updateNoteStatus(selectedNoteIds, NoteStatus.ACTIVE, SyncStatus.SYNCED )
                 })))
                 _selectedNoteIds.value = setOf()
             }.onFailure {

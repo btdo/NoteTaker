@@ -11,12 +11,21 @@ data class Note(
     val status: NoteStatus = NoteStatus.ACTIVE,
     val lastUpdated: Long = System.currentTimeMillis(),
     val imageUri: String? = null,
-    val attachments: List<Attachment> = emptyList()
+    val attachments: List<Attachment> = emptyList(),
+    val version: Long = 1,                // Optimistic locking version
+    val syncStatus: SyncStatus = SyncStatus.SYNCED,    // SYNCED, PENDING, CONFLICT
+    val serverId: Long? = null
 )
 
 enum class NoteStatus {
     ARCHIVED,
     ACTIVE,
+}
+
+enum class SyncStatus {
+    SYNCED,
+    PENDING,
+    CONFLICT
 }
 
 fun Note.toEntity(): NoteEntity = NoteEntity(
@@ -25,6 +34,8 @@ fun Note.toEntity(): NoteEntity = NoteEntity(
     note = note,
     status = status.name,
     lastUpdated = lastUpdated,
-    imageUri = imageUri
+    imageUri = imageUri,
+    serverId = serverId,
+    version = version,
+    syncStatus = syncStatus.name,
 )
-

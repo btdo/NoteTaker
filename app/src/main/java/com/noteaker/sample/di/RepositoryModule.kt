@@ -1,9 +1,11 @@
 package com.noteaker.sample.di
 
+import com.noteaker.sample.data.repository.DataStoreSyncPreferencesRepository
 import com.noteaker.sample.data.repository.MyNoteRepository
 import com.noteaker.sample.data.repository.MyQuoteRepository
 import com.noteaker.sample.data.repository.NoteRepository
 import com.noteaker.sample.data.repository.QuoteRepository
+import com.noteaker.sample.data.repository.SyncPreferencesRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -19,5 +21,8 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindQuoteRepository(impl: MyQuoteRepository): QuoteRepository
+
+    @Binds
+    abstract fun bindSyncPreferencesRepository(impl: DataStoreSyncPreferencesRepository): SyncPreferencesRepository
 
 }

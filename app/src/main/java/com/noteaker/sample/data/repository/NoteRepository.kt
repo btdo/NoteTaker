@@ -10,6 +10,7 @@ import com.noteaker.sample.di.IoDispatcher
 import com.noteaker.sample.domain.model.Attachment
 import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.domain.model.NoteStatus
+import com.noteaker.sample.domain.model.SyncStatus
 import com.noteaker.sample.domain.model.toEntity
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
@@ -29,7 +30,7 @@ interface NoteRepository {
     suspend fun get(id: Int): Note
     suspend fun deleteSelectedNotes(noteIds: Set<Long>): Result<Unit>
 
-    suspend fun updateNoteStatus(noteIds: Set<Long>, status: NoteStatus): Result<Unit>
+    suspend fun updateNoteStatus(noteIds: Set<Long>, status: NoteStatus, syncStatus: SyncStatus): Result<Unit>
 }
 
 class MyNoteRepository @Inject constructor(
@@ -116,14 +117,14 @@ class MyNoteRepository @Inject constructor(
             }
         }
 
-    override suspend fun updateNoteStatus(noteIds: Set<Long>, status: NoteStatus): Result<Unit> =
+    override suspend fun updateNoteStatus(noteIds: Set<Long>, status: NoteStatus, syncStatus: SyncStatus): Result<Unit> =
         withContext(dispatcher) {
             runCatching {
                 database.withTransaction {
                     noteIds.forEach { noteId ->
                         val note = noteDao.getById(noteId)
                         note?.let {
-                            noteDao.update(note.copy(status = status.toString()))
+                            noteDao.update(note.copy(status = status.toString(), syncStatus = syncStatus.name, version = note.version + 1, lastUpdated = System.currentTimeMillis()))
                         }
                     }
                 }

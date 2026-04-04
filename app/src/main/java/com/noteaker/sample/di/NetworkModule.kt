@@ -1,7 +1,9 @@
 package com.noteaker.sample.di
 
 import com.noteaker.sample.BuildConfig
+import com.noteaker.sample.data.network.FakeSyncApi
 import com.noteaker.sample.data.network.ImageApi
+import com.noteaker.sample.data.network.SyncApi
 import com.noteaker.sample.data.network.ZenQuotesApi
 import dagger.Module
 import dagger.Provides
@@ -52,5 +54,10 @@ object NetworkModule {
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build().create(ImageApi::class.java)
+    }
+
+    @Provides
+    fun provideSyncApi(okHttpClient: OkHttpClient): SyncApi {
+        return FakeSyncApi()
     }
 }

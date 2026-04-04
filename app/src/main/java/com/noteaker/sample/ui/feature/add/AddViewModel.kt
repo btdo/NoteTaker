@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.noteaker.sample.data.repository.NoteRepository
 import com.noteaker.sample.domain.model.Note
+import com.noteaker.sample.domain.model.SyncStatus
 import com.noteaker.sample.navigation.NavigationManager
 import com.noteaker.sample.ui.model.UIState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +27,7 @@ class AddViewModel @Inject constructor(
             try {
                 val success = _uiState.compareAndSet(UIState.Success(Unit), UIState.Loading)
                 if (!success) return@launch
-                repository.add(note)
+                repository.add(note.copy(syncStatus = SyncStatus.PENDING, version = 1))
                 navigationManager.showSnackBar("Note Saved")
                 navigationManager.popBackStack()
             } catch (e: Exception) {

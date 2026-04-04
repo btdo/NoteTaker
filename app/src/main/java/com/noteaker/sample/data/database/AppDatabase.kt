@@ -9,7 +9,7 @@ import com.noteaker.sample.data.model.NoteEntity
 
 @Database(
     entities = [NoteEntity::class, AttachmentEntity::class],
-    version = 5,
+    version = 6,  // Incremented: Added UNIQUE constraint on serverId
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

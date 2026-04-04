@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.noteaker.sample.data.repository.NoteRepository
 import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.domain.model.NoteStatus
+import com.noteaker.sample.domain.model.SyncStatus
 import com.noteaker.sample.navigation.NavigationManager
 import com.noteaker.sample.navigation.SnackBar
 import com.noteaker.sample.navigation.SnackBarAction
@@ -31,8 +32,9 @@ class EditViewModel @Inject constructor(
             try {
                 val success = _uiState.compareAndSet(UIState.Success(Unit), UIState.Loading)
                 if (!success) return@launch
-                _note.value = note
-                repository.edit(note)
+                val newNote = note.copy(syncStatus = SyncStatus.PENDING, version = note.version + 1)
+                _note.value = newNote
+                repository.edit(newNote)
                 navigationManager.showSnackBar("Note Saved")
                 navigationManager.popBackStack()
             } catch (e: Exception) {
@@ -44,9 +46,9 @@ class EditViewModel @Inject constructor(
     fun onDelete(note: Note) {
         viewModelScope.launch {
             val deletedSet = mutableSetOf(note.id)
-            repository.updateNoteStatus(deletedSet, NoteStatus.ARCHIVED).onSuccess {
+            repository.updateNoteStatus(deletedSet, NoteStatus.ARCHIVED, syncStatus = SyncStatus.PENDING).onSuccess {
                 navigationManager.showSnackBar(SnackBar("Note deleted", SnackBarAction("Undo", {
-                    repository.updateNoteStatus(deletedSet, NoteStatus.ACTIVE)
+                    repository.updateNoteStatus(deletedSet, note.status, syncStatus = note.syncStatus)
                 })))
                 navigationManager.popBackStack()
             }.onFailure {
