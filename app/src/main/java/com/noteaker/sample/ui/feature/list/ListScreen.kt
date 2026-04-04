@@ -35,9 +35,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.noteaker.sample.domain.model.Attachment
+import com.noteaker.sample.domain.model.Note
+import com.noteaker.sample.domain.model.SyncStatus
 import com.noteaker.sample.ui.common.ZenQuoteBox
-import com.noteaker.sample.ui.model.AttachmentUI
-import com.noteaker.sample.ui.model.NoteUI
 import com.noteaker.sample.ui.model.UIState
 import com.noteaker.sample.ui.theme.NoteTakerTheme
 
@@ -67,7 +68,7 @@ fun ListSearchScreen(viewModel: ListViewModel) {
 
         if (uiState is UIState.Success<*>) {
             ListScreen(
-                notes = (uiState as UIState.Success<List<NoteUI>>).data,
+                notes = (uiState as UIState.Success<List<Note>>).data,
                 selectedNoteIds = selectedNoteIds,
                 onAddClick = viewModel::addClick,
                 onEditClick = viewModel::onEditClick,
@@ -92,11 +93,11 @@ fun ListSearchScreen(viewModel: ListViewModel) {
 
 @Composable
 fun ListScreen(
-    notes: List<NoteUI>,
+    notes: List<Note>,
     selectedNoteIds: Set<Long> = emptySet(),
     isSearching: Boolean = false,
     onAddClick: () -> Unit = {},
-    onEditClick: (note: NoteUI) -> Unit = {},
+    onEditClick: (note: Note) -> Unit = {},
     onSelectionChange: (noteId: Long, isSelected: Boolean) -> Unit = { _, _ -> },
     onDeleteClick: () -> Unit = {}
 ) {
@@ -182,29 +183,32 @@ fun ListScreen(
 fun ListScreenPreview() {
     NoteTakerTheme(darkTheme = false) {
         val notes = listOf(
-            NoteUI(
+            Note(
                 id = 1,
                 title = "Meeting Notes",
                 note = "Discussed project timeline and deliverables. Need to follow up with the team about the new requirements.",
                 lastUpdated = System.currentTimeMillis() - 3600000,
+                syncStatus = SyncStatus.SYNCED,
                 attachments = listOf(
-                    AttachmentUI(uri = "file://test.pdf", displayName = "document.pdf")
+                    Attachment(uri = "file://test.pdf", displayName = "document.pdf")
                 )
             ),
-            NoteUI(
+            Note(
                 id = 2,
                 title = "Shopping List",
                 note = "Milk, Eggs, Bread, Coffee, Fruits",
-                lastUpdated = System.currentTimeMillis() - 7200000
+                lastUpdated = System.currentTimeMillis() - 7200000,
+                syncStatus = SyncStatus.PENDING
             ),
-            NoteUI(
+            Note(
                 id = 3,
                 title = "Ideas for App",
                 note = "Add dark mode support, implement search functionality, create backup feature",
                 lastUpdated = System.currentTimeMillis() - 86400000,
+                syncStatus = SyncStatus.CONFLICT,
                 attachments = listOf(
-                    AttachmentUI(uri = "file://sketch1.png"),
-                    AttachmentUI(uri = "file://sketch2.png")
+                    Attachment(uri = "file://sketch1.png"),
+                    Attachment(uri = "file://sketch2.png")
                 )
             )
         )
@@ -218,13 +222,13 @@ fun ListScreenPreview() {
 fun ListScreenPreviewDark() {
     NoteTakerTheme(darkTheme = true) {
         val notes = listOf(
-            NoteUI(
+            Note(
                 id = 1,
                 title = "Meeting Notes",
                 note = "Discussed project timeline and deliverables. Need to follow up with the team about the new requirements.",
                 lastUpdated = System.currentTimeMillis() - 3600000
             ),
-            NoteUI(
+            Note(
                 id = 2,
                 title = "Shopping List",
                 note = "Milk, Eggs, Bread, Coffee, Fruits",

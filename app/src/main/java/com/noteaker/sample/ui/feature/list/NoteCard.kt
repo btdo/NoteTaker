@@ -27,8 +27,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.noteaker.sample.ui.model.AttachmentUI
-import com.noteaker.sample.ui.model.NoteUI
+import com.noteaker.sample.domain.model.Attachment
+import com.noteaker.sample.domain.model.Note
+import com.noteaker.sample.domain.model.SyncStatus
 import com.noteaker.sample.ui.theme.NoteTakerTheme
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -36,7 +37,7 @@ import java.util.Locale
 
 @Composable
 fun NoteCard(
-    note: NoteUI,
+    note: Note,
     isSelected: Boolean,
     onClick: () -> Unit,
     onSelectionChange: (Boolean) -> Unit
@@ -149,12 +150,13 @@ private fun formatDate(timestamp: Long): String {
 fun NoteCardPreview() {
     NoteTakerTheme(darkTheme = false) {
         NoteCard(
-            note = NoteUI(
+            note = Note(
                 id = 1,
                 title = "Meeting Notes",
                 note = "Discussed project timeline and deliverables. Need to follow up with the team about the new requirements.",
                 lastUpdated = System.currentTimeMillis() - 3600000,
                 imageUri = "https://picsum.photos/id/237/400/300",
+                syncStatus = SyncStatus.SYNCED,
                 attachments = emptyList()
             ),
             isSelected = false,
@@ -169,15 +171,16 @@ fun NoteCardPreview() {
 fun NoteCardWithAttachmentsPreview() {
     NoteTakerTheme(darkTheme = false) {
         NoteCard(
-            note = NoteUI(
+            note = Note(
                 id = 2,
                 title = "Project Documentation",
                 note = "Important files and resources for the upcoming presentation. Review all materials before the meeting.",
                 lastUpdated = System.currentTimeMillis() - 7200000,
                 imageUri = "https://picsum.photos/id/180/400/300",
+                syncStatus = SyncStatus.PENDING,
                 attachments = listOf(
-                    AttachmentUI(uri = "file://document.pdf", displayName = "document.pdf"),
-                    AttachmentUI(uri = "file://image.png", displayName = "image.png")
+                    Attachment(uri = "file://document.pdf", displayName = "document.pdf"),
+                    Attachment(uri = "file://image.png", displayName = "image.png")
                 )
             ),
             isSelected = true,
@@ -192,11 +195,12 @@ fun NoteCardWithAttachmentsPreview() {
 fun NoteCardDarkPreview() {
     NoteTakerTheme(darkTheme = true) {
         NoteCard(
-            note = NoteUI(
+            note = Note(
                 id = 3,
                 title = "Shopping List",
                 note = "Milk, Eggs, Bread, Coffee, Fruits, Vegetables, Chicken",
                 lastUpdated = System.currentTimeMillis() - 86400000,
+                syncStatus = SyncStatus.CONFLICT,
                 attachments = emptyList()
             ),
             isSelected = false,
@@ -211,13 +215,13 @@ fun NoteCardDarkPreview() {
 fun NoteCardLongTitlePreview() {
     NoteTakerTheme(darkTheme = false) {
         NoteCard(
-            note = NoteUI(
+            note = Note(
                 id = 4,
                 title = "This is a very long title that should be truncated with ellipsis when it exceeds the maximum width",
                 note = "This is a note with a very long title to test the text overflow behavior. The title should be truncated properly.",
                 lastUpdated = System.currentTimeMillis() - 172800000,
                 attachments = listOf(
-                    AttachmentUI(uri = "file://test.pdf", displayName = "test.pdf")
+                    Attachment(uri = "file://test.pdf", displayName = "test.pdf")
                 ),
                 imageUri = "https://picsum.photos/200/300"
             ),

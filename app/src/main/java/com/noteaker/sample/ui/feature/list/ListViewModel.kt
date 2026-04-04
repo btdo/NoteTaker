@@ -6,6 +6,7 @@ import com.noteaker.sample.ai.IntentOrchestrator
 import com.noteaker.sample.data.model.ZenQuotes
 import com.noteaker.sample.data.repository.NoteRepository
 import com.noteaker.sample.data.repository.QuoteRepository
+import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.domain.model.NoteStatus
 import com.noteaker.sample.domain.model.SyncStatus
 import com.noteaker.sample.navigation.NavState
@@ -13,7 +14,6 @@ import com.noteaker.sample.navigation.NavigationCommand
 import com.noteaker.sample.navigation.NavigationManager
 import com.noteaker.sample.navigation.SnackBar
 import com.noteaker.sample.navigation.SnackBarAction
-import com.noteaker.sample.ui.model.NoteUI
 import com.noteaker.sample.ui.model.UIState
 import com.noteaker.sample.ui.navigation.AddRoute
 import com.noteaker.sample.ui.navigation.EditRoute
@@ -66,9 +66,6 @@ class ListViewModel @Inject constructor(
     val searchResult = combine(
         _searchQuery.debounce(500),
         repository.noteList
-            .map { notes ->
-                notes.map { note -> NoteUI.fromNote(note) }
-            }
     ) { query, notes ->
         val q = query.trim()
         val filteredNotes = if (q.isEmpty()) notes else notes.filter {
@@ -117,7 +114,7 @@ class ListViewModel @Inject constructor(
         }
     }
 
-    fun onEditClick(note: NoteUI) {
+    fun onEditClick(note: Note) {
         viewModelScope.launch {
             intentOrchestrator.processUserIntent(
                 "User tapped on note with id ${note.id} to edit it."

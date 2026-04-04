@@ -8,11 +8,11 @@ import com.noteaker.sample.data.repository.QuoteRepository
 import com.noteaker.sample.domain.model.Attachment
 import com.noteaker.sample.domain.model.Note
 import com.noteaker.sample.domain.model.NoteStatus
+import com.noteaker.sample.domain.model.SyncStatus
 import com.noteaker.sample.navigation.NavState
 import com.noteaker.sample.navigation.NavigationCommand
 import com.noteaker.sample.navigation.NavigationManager
 import com.noteaker.sample.navigation.SnackBar
-import com.noteaker.sample.ui.model.NoteUI
 import com.noteaker.sample.ui.model.UIState
 import com.noteaker.sample.ui.navigation.AddRoute
 import com.noteaker.sample.ui.navigation.EditRoute
@@ -96,11 +96,11 @@ class ListViewModelTest {
         } returns Result.success(Unit)
 
         viewModel.onEditClick(
-            NoteUI(
-                1,
-                "Test",
-                "Test Note",
-                System.currentTimeMillis(),
+            Note(
+                id = 1,
+                title = "Test",
+                note = "Test Note",
+                lastUpdated = System.currentTimeMillis(),
                 attachments = emptyList()
             )
         )
@@ -214,8 +214,13 @@ class ListViewModelTest {
             intentOrchestrator.processUserIntent(any())
         } returns Result.failure(Exception("Failed to process intent"))
 
-        val note =
-            NoteUI(42, "Title", "Body", System.currentTimeMillis(), attachments = emptyList())
+        val note = Note(
+            id = 42,
+            title = "Title",
+            note = "Body",
+            lastUpdated = System.currentTimeMillis(),
+            attachments = emptyList()
+        )
         viewModel.onEditClick(note)
 
         coVerify(exactly = 1) {
@@ -376,7 +381,7 @@ class ListViewModelTest {
             ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
 
         coEvery {
-            repository.updateNoteStatus(deletedSet, NoteStatus.ARCHIVED)
+            repository.updateNoteStatus(deletedSet, NoteStatus.ARCHIVED, SyncStatus.PENDING)
         } returns Result.success(Unit)
 
         searchViewModel.onSelectionChange(1, true)
@@ -384,7 +389,7 @@ class ListViewModelTest {
         searchViewModel.onDeleteClick()
         advanceUntilIdle()
         coVerify(exactly = 1) {
-            repository.updateNoteStatus(deletedSet, NoteStatus.ARCHIVED)
+            repository.updateNoteStatus(deletedSet, NoteStatus.ARCHIVED, SyncStatus.PENDING)
         }
 
         val snackBarSlot = slot<SnackBar>()
@@ -433,7 +438,7 @@ class ListViewModelTest {
         // noteList is read when ListViewModel initializes combine(...); stub before construction.
         val searchViewModel =
             ListViewModel(repository, navigationManager, intentOrchestrator, quoteRepository)
-        var list: List<NoteUI>? = null
+        var list: List<Note>? = null
         val job = launch {
             searchViewModel.searchResult.collect { list = it }
         }
